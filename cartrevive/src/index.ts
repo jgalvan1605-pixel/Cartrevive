@@ -33,6 +33,12 @@ app.decorate('authenticate', async (request: any, reply: any) => {
   }
 });
 
+// Función auxiliar para limpiar tokens de espacios o caracteres invisibles
+function cleanBotToken(token?: string | null): string {
+  if (!token) return '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
+  return token.replace(/[^\x20-\x7E]/g, '').trim();
+}
+
 // Health check
 app.get('/api/health', async () => ({ status: 'ok', version: '2.0.0-telegram-autolink' }));
 
@@ -92,8 +98,9 @@ app.post('/api/tenant/disconnect-telegram', { preHandler: [(app as any).authenti
 
 // Test Alerta Telegram
 app.post('/api/tenant/test-telegram', { preHandler: [(app as any).authenticate] }, async (request: any, reply) => {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
-  const chatId = request.body.chatId;
+  const rawToken = request.body.botToken || (request.user?.id ? (await prisma.tenant.findUnique({ where: { id: request.user.id } }))?.telegramBotToken : null);
+  const botToken = cleanBotToken(rawToken || process.env.TELEGRAM_BOT_TOKEN);
+  const chatId = String(request.body.chatId || '').trim();
 
   if (!chatId) return reply.status(400).send({ error: 'Falta Chat ID' });
 
@@ -116,7 +123,7 @@ app.post('/api/tenant/test-telegram', { preHandler: [(app as any).authenticate] 
 // WEBHOOK OFICIAL DE TELEGRAM: AUTO-VINCULACIÓN POR DEEP-LINK (/start <tenantId>)
 app.post('/api/telegram/webhook', async (request: any, reply) => {
   const update = request.body;
-  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
+  const botToken = cleanBotToken(process.env.TELEGRAM_BOT_TOKEN);
 
   if (update && update.message && update.message.text) {
     const text: string = update.message.text.trim();
@@ -139,7 +146,7 @@ app.post('/api/telegram/webhook', async (request: any, reply) => {
               }
             });
 
-            // Envío con doble garantía (Llamada directa API + Retorno de Webhook)
+            // Enviar mensaje directo con confirmación de enlace
             await sendTelegramMessage(
               botToken,
               chatId,
@@ -279,7 +286,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     ?.map(item => `${item.quantity}x ${item.title} (${item.price} ${payload.currency})`)
     .join(', ') || 'Sin artículos';
 
-  // 1. Umbral Mínimo
+  // 1. Comprobar Umbral Mínimo
   if (cartAmount < tenant.minThreshold) {
     await prisma.cartLog.upsert({
       where: { tenantId_shopifyCartId: { tenantId: tenant.id, shopifyCartId: BigInt(payload.id) } },
@@ -300,7 +307,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     return reply.status(200).send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  // 2. Round Robin
+  // 2. Round Robin de Comerciales
   const eligibleAgents = tenant.agents.filter(a => {
     const minOk = cartAmount >= a.minAmount;
     const maxOk = a.maxAmount === null || a.maxAmount === undefined || cartAmount <= a.maxAmount;
@@ -373,20 +380,27 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
       }
     });
 
-    // 3. Telegram Push
-    const activeToken = tenant.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
-    if (activeToken && tenant.telegramChatId) {
-      sendTelegramAlert(activeToken, tenant.telegramChatId, {
-        cartId: payload.id,
-        customerName,
-        customerPhone,
-        customerEmail,
-        cartAmount,
-        currency: payload.currency,
-        itemsSummary,
-        assignedAgentName,
-        recoveryUrl: payload.abandoned_checkout_url
-      }).catch(err => console.error('Error Telegram:', err));
+    // 3. Telegram Push Garantizado con Await y Sanitización
+    const activeToken = cleanBotToken(tenant.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN);
+    const targetChatId = tenant.telegramChatId ? tenant.telegramChatId.trim() : null;
+
+    if (activeToken && targetChatId) {
+      try {
+        await sendTelegramAlert(activeToken, targetChatId, {
+          cartId: payload.id,
+          customerName,
+          customerPhone,
+          customerEmail,
+          cartAmount,
+          currency: payload.currency,
+          itemsSummary,
+          assignedAgentName,
+          recoveryUrl: payload.abandoned_checkout_url
+        });
+        console.log(`[Telegram] Alerta de carrito entregada a chat ID: ${targetChatId}`);
+      } catch (tgErr: any) {
+        console.error('[Telegram] Error enviando alerta:', tgErr.response?.data || tgErr.message);
+      }
     }
 
     return reply.status(200).send({
