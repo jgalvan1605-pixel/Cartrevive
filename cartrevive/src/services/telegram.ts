@@ -17,9 +17,9 @@ export async function sendTelegramAlert(
 ): Promise<boolean> {
   if (!botToken || !chatId) return false;
 
-  const phoneClean = (data.customerPhone || '').replace(/[^0-9+]/g, '');
+  const phoneClean = (data.customerPhone || '').replace(/[^0-9]/g, '');
   const waUrl = phoneClean
-    ? `https://wa.me/${phoneClean.replace('+', '')}?text=Hola%20${encodeURIComponent(data.customerName || '')},%20te%20contacto%20sobre%20tu%20pedido%20pendiente`
+    ? `https://wa.me/${phoneClean}?text=Hola%20${encodeURIComponent(data.customerName || '')},%20te%20contacto%20sobre%20tu%20pedido%20pendiente`
     : null;
 
   const message = `🚨 <b>¡NUEVO CARRITO DE ALTO VALOR!</b>
@@ -37,12 +37,9 @@ export async function sendTelegramAlert(
   const actionRow: any[] = [];
 
   if (waUrl) {
-    actionRow.push({ text: '💬 WhatsApp Directo', url: waUrl });
+    actionRow.push({ text: '💬 Abrir WhatsApp', url: waUrl });
   }
-  if (data.customerPhone) {
-    actionRow.push({ text: '📞 Llamar', url: `tel:${phoneClean}` });
-  }
-  if (data.recoveryUrl) {
+  if (data.recoveryUrl && data.recoveryUrl.startsWith('http')) {
     actionRow.push({ text: '🛒 Ver Carrito', url: data.recoveryUrl });
   }
 
@@ -63,6 +60,9 @@ export async function sendTelegramAlert(
     });
 
     const result = await res.json();
+    if (!result.ok) {
+      console.error('Respuesta de error de Telegram:', result);
+    }
     return result.ok === true;
   } catch (error) {
     console.error('Error enviando notificación a Telegram:', error);
