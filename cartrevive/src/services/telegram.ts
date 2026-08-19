@@ -20,26 +20,22 @@ export async function sendTelegramAlert(
   if (!botToken || !chatId) return false;
 
   const phoneClean = (data.customerPhone || '').replace(/[^0-9]/g, '');
-  const waUrl = phoneClean
-    ? `https://wa.me/${phoneClean}?text=Hola%20${encodeURIComponent(data.customerName || '')},%20te%20contacto%20sobre%20tu%20pedido%20pendiente`
-    : null;
+  const waUrl = phoneClean.length >= 7 ? `https://wa.me/${phoneClean}` : null;
 
-  const message = `🚨 <b>¡NUEVO CARRITO DE ALTO VALOR!</b>
-
-💰 <b>Importe:</b> ${data.cartAmount.toFixed(2)} ${data.currency}
-👤 <b>Cliente:</b> ${data.customerName}
-📞 <b>Teléfono:</b> ${data.customerPhone || 'No facilitado'}
-✉️ <b>Email:</b> ${data.customerEmail || 'No facilitado'}
-🎯 <b>Comercial Asignado:</b> ${data.assignedAgentName || 'Equipo General'}
-📦 <b>Artículos:</b> <i>${data.itemsSummary}</i>
-
-⚡ <i>¡Contacta al lead en menos de 5 minutos para maximizar el cierre!</i>`;
+  const message = `🚨 <b>¡NUEVO CARRITO DE ALTO VALOR!</b>\n\n` +
+    `💰 <b>Importe:</b> ${data.cartAmount.toFixed(2)} ${data.currency}\n` +
+    `👤 <b>Cliente:</b> ${data.customerName}\n` +
+    `📞 <b>Teléfono:</b> ${data.customerPhone || 'No facilitado'}\n` +
+    `✉️ <b>Email:</b> ${data.customerEmail || 'No facilitado'}\n` +
+    `🎯 <b>Comercial Asignado:</b> ${data.assignedAgentName || 'Equipo General'}\n` +
+    `📦 <b>Artículos:</b> <i>${data.itemsSummary}</i>\n\n` +
+    `⚡ <i>¡Contacta al lead en menos de 5 minutos para maximizar el cierre!</i>`;
 
   const inlineKeyboard: any[] = [];
   const actionRow: any[] = [];
 
   if (waUrl) {
-    actionRow.push({ text: '💬 Abrir WhatsApp', url: waUrl });
+    actionRow.push({ text: '💬 WhatsApp', url: waUrl });
   }
   if (data.recoveryUrl && data.recoveryUrl.startsWith('http')) {
     actionRow.push({ text: '🛒 Ver Carrito', url: data.recoveryUrl });
@@ -50,16 +46,33 @@ export async function sendTelegramAlert(
   }
 
   try {
-    const res = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      chat_id: chatId,
+    const payload: any = {
+      chat_id: String(chatId),
       text: message,
-      parse_mode: 'HTML',
-      reply_markup: inlineKeyboard.length > 0 ? { inline_keyboard: inlineKeyboard } : undefined
-    });
+      parse_mode: 'HTML'
+    };
+
+    if (inlineKeyboard.length > 0) {
+      payload.reply_markup = { inline_keyboard: inlineKeyboard };
+    }
+
+    const res = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, payload);
     return res.data.ok === true;
   } catch (error: any) {
-    console.error('Error enviando notificación a Telegram:', error.response?.data || error.message);
-    return false;
+    console.error('Error enviando alerta con botones:', error.response?.data || error.message);
+
+    // Reintento en texto plano si falla por parseo
+    try {
+      const plainText = message.replace(/<[^>]*>?/gm, '');
+      const fallbackRes = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        chat_id: String(chatId),
+        text: plainText
+      });
+      return fallbackRes.data.ok === true;
+    } catch (e: any) {
+      console.error('Fallo total de envío:', e.response?.data || e.message);
+      return false;
+    }
   }
 }
 
@@ -70,22 +83,22 @@ export async function sendTelegramMessage(
 ): Promise<boolean> {
   try {
     const res = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      chat_id: chatId,
+      chat_id: String(chatId),
       text,
       parse_mode: 'HTML'
     });
     return res.data.ok === true;
   } catch (error: any) {
-    console.error('Error enviando HTML a Telegram, reintentando texto plano:', error.response?.data || error.message);
+    console.error('Error enviando HTML, reintentando texto plano:', error.response?.data || error.message);
     try {
       const plainText = text.replace(/<[^>]*>?/gm, '');
       const retryRes = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        chat_id: chatId,
+        chat_id: String(chatId),
         text: plainText
       });
       return retryRes.data.ok === true;
     } catch (retryError: any) {
-      console.error('Error final enviando mensaje a Telegram:', retryError.response?.data || retryError.message);
+      console.error('Error final enviando mensaje:', retryError.response?.data || retryError.message);
       return false;
     }
   }
