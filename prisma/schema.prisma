@@ -39,6 +39,7 @@ model SalesAgent {
   minAmount           Float        @default(0)
   maxAmount           Float?
   isActive            Boolean      @default(true)
+  lastAssignedAt      DateTime?    // Timestamp para Round-Robin puro
   createdAt           DateTime     @default(now())
 
   assignedCarts       CartLog[]

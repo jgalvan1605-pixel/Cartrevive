@@ -32,7 +32,7 @@ app.decorate('authenticate', async (request: any, reply: any) => {
   }
 });
 
-// Auth
+// Auth: Register
 app.post('/api/auth/register', async (request, reply) => {
   const { name, email, password, minThreshold } = request.body as any;
   if (!name || !email || !password) return reply.status(400).send({ error: 'Faltan datos obligatorios' });
@@ -49,6 +49,7 @@ app.post('/api/auth/register', async (request, reply) => {
   return reply.status(201).send({ token, tenant });
 });
 
+// Auth: Login
 app.post('/api/auth/login', async (request, reply) => {
   const { email, password } = request.body as any;
   const tenant = await prisma.tenant.findUnique({ where: { email } });
@@ -76,11 +77,15 @@ app.post('/api/tenant/config', { preHandler: [(app as any).authenticate] }, asyn
   return reply.send({ status: 'updated', tenant: updated });
 });
 
-// Reset seguro de carritos para demos
+// Reset de carritos para pruebas
 app.post('/api/webhooks/shopify/:tenantId/reset', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   await prisma.cartLog.deleteMany({ where: { tenantId } });
-  return reply.send({ status: 'success', message: 'Carritos eliminados para el tenant' });
+  await prisma.salesAgent.updateMany({
+    where: { tenantId },
+    data: { lastAssignedAt: null }
+  });
+  return reply.send({ status: 'success', message: 'Carritos reseteados' });
 });
 
 // CRUD Comerciales
@@ -152,7 +157,7 @@ app.get('/api/tenant/logs', { preHandler: [(app as any).authenticate] }, async (
   }));
 });
 
-// WEBHOOK SHOPIFY: MOTOR DE ASIGNACIÓN EQUITATIVA
+// WEBHOOK SHOPIFY: MOTOR ROUND-ROBIN CON PERSISTENCIA TEMPORAL
 app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   const payload = request.body as ShopifyCheckoutEvent;
@@ -162,8 +167,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     where: { id: tenantId },
     include: {
       agents: {
-        where: { isActive: true },
-        include: { _count: { select: { assignedCarts: true } } }
+        where: { isActive: true }
       }
     }
   });
@@ -180,7 +184,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     ?.map(item => `${item.quantity}x ${item.title} (${item.price} ${payload.currency})`)
     .join(', ') || 'Sin artículos';
 
-  // 1. Filtro Umbral Mínimo
+  // 1. Filtro Umbral Económico
   if (cartAmount < tenant.minThreshold) {
     await prisma.cartLog.upsert({
       where: { tenantId_shopifyCartId: { tenantId: tenant.id, shopifyCartId: BigInt(payload.id) } },
@@ -201,8 +205,8 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     return reply.status(200).send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  // 2. MOTOR DE REPARTO
-  const matchingAgents = tenant.agents.filter(a => {
+  // 2. FILTRAR AGENTES APTOS PARA ESTE MONTO
+  const eligibleAgents = tenant.agents.filter(a => {
     const minOk = cartAmount >= a.minAmount;
     const maxOk = a.maxAmount === null || a.maxAmount === undefined || cartAmount <= a.maxAmount;
     return minOk && maxOk;
@@ -210,17 +214,36 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
 
   let selectedAgent = null;
 
-  if (matchingAgents.length > 0) {
-    // Ordenar por MENOR número de carritos asignados
-    matchingAgents.sort((a, b) => a._count.assignedCarts - b._count.assignedCarts);
-    selectedAgent = matchingAgents[0];
+  if (eligibleAgents.length > 0) {
+    // 3. ROUND-ROBIN REAL: Ordenar por el que lleve más tiempo sin recibir lead (lastAssignedAt nulo o más antiguo)
+    eligibleAgents.sort((a, b) => {
+      if (!a.lastAssignedAt && !b.lastAssignedAt) return a.createdAt.getTime() - b.createdAt.getTime();
+      if (!a.lastAssignedAt) return -1;
+      if (!b.lastAssignedAt) return 1;
+      return a.lastAssignedAt.getTime() - b.lastAssignedAt.getTime();
+    });
+    selectedAgent = eligibleAgents[0];
   } else if (tenant.agents.length > 0) {
-    const allSorted = [...tenant.agents].sort((a, b) => a._count.assignedCarts - b._count.assignedCarts);
-    selectedAgent = allSorted[0];
+    // Fallback general si ningún agente tiene el rango específico
+    const allAgents = [...tenant.agents].sort((a, b) => {
+      if (!a.lastAssignedAt && !b.lastAssignedAt) return a.createdAt.getTime() - b.createdAt.getTime();
+      if (!a.lastAssignedAt) return -1;
+      if (!b.lastAssignedAt) return 1;
+      return a.lastAssignedAt.getTime() - b.lastAssignedAt.getTime();
+    });
+    selectedAgent = allAgents[0];
   }
 
   const assignedAgentId = selectedAgent ? selectedAgent.id : null;
   const assignedAgentName = selectedAgent ? selectedAgent.name : null;
+
+  // 4. ACTUALIZAR TIMESTAMP DEL AGENTE SELECCIONADO
+  if (selectedAgent) {
+    await prisma.salesAgent.update({
+      where: { id: selectedAgent.id },
+      data: { lastAssignedAt: new Date() }
+    });
+  }
 
   try {
     const holdedResult = await holdedService.createOpportunity(payload, {
