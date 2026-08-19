@@ -76,10 +76,18 @@ app.post('/api/tenant/config', { preHandler: [(app as any).authenticate] }, asyn
   return reply.send({ status: 'updated', tenant: updated });
 });
 
+// Reset seguro de carritos para demos
+app.post('/api/webhooks/shopify/:tenantId/reset', async (request, reply) => {
+  const { tenantId } = request.params as { tenantId: string };
+  await prisma.cartLog.deleteMany({ where: { tenantId } });
+  return reply.send({ status: 'success', message: 'Carritos eliminados para el tenant' });
+});
+
 // CRUD Comerciales
 app.get('/api/agents', { preHandler: [(app as any).authenticate] }, async (request: any) => {
   return prisma.salesAgent.findMany({
     where: { tenantId: request.user.id },
+    include: { _count: { select: { assignedCarts: true } } },
     orderBy: { createdAt: 'asc' }
   });
 });
@@ -94,8 +102,8 @@ app.post('/api/agents', { preHandler: [(app as any).authenticate] }, async (requ
       name,
       email: email || null,
       phone: phone || null,
-      minAmount: minAmount ? parseFloat(minAmount) : 0,
-      maxAmount: maxAmount ? parseFloat(maxAmount) : null
+      minAmount: minAmount !== undefined && minAmount !== '' ? parseFloat(minAmount) : 0,
+      maxAmount: maxAmount !== undefined && maxAmount !== '' && maxAmount !== null ? parseFloat(maxAmount) : null
     }
   });
   return reply.status(201).send(agent);
@@ -134,7 +142,7 @@ app.get('/api/tenant/logs', { preHandler: [(app as any).authenticate] }, async (
     where: { tenantId: request.user.id },
     include: { agent: true },
     orderBy: { createdAt: 'desc' },
-    take: 50
+    take: 100
   });
 
   return logs.map(log => ({
@@ -144,7 +152,7 @@ app.get('/api/tenant/logs', { preHandler: [(app as any).authenticate] }, async (
   }));
 });
 
-// 1. Webhook Checkouts Abandonados
+// WEBHOOK SHOPIFY: MOTOR DE ASIGNACIÓN EQUITATIVA
 app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   const payload = request.body as ShopifyCheckoutEvent;
@@ -152,13 +160,18 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
-    include: { agents: { where: { isActive: true } } }
+    include: {
+      agents: {
+        where: { isActive: true },
+        include: { _count: { select: { assignedCarts: true } } }
+      }
+    }
   });
 
-  if (!tenant || !tenant.isActive) return reply.status(404).send({ error: 'Tenant no válido' });
+  if (!tenant || !tenant.isActive) return reply.status(404).send({ error: 'Tenant inactivo' });
 
   const customerName = payload.customer 
-    ? `${payload.customer.first_name} ${payload.customer.last_name}`.trim()
+    ? `${payload.customer.first_name || ''} ${payload.customer.last_name || ''}`.trim() || 'Cliente Anónimo'
     : 'Cliente Anónimo';
 
   const customerEmail = payload.email || payload.customer?.email || null;
@@ -167,6 +180,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     ?.map(item => `${item.quantity}x ${item.title} (${item.price} ${payload.currency})`)
     .join(', ') || 'Sin artículos';
 
+  // 1. Filtro Umbral Mínimo
   if (cartAmount < tenant.minThreshold) {
     await prisma.cartLog.upsert({
       where: { tenantId_shopifyCartId: { tenantId: tenant.id, shopifyCartId: BigInt(payload.id) } },
@@ -187,17 +201,26 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     return reply.status(200).send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  // Regla por Importe
-  let matchedAgent = tenant.agents.find(a => {
+  // 2. MOTOR DE REPARTO
+  const matchingAgents = tenant.agents.filter(a => {
     const minOk = cartAmount >= a.minAmount;
-    const maxOk = a.maxAmount === null || cartAmount <= a.maxAmount;
+    const maxOk = a.maxAmount === null || a.maxAmount === undefined || cartAmount <= a.maxAmount;
     return minOk && maxOk;
   });
 
-  if (!matchedAgent && tenant.agents.length > 0) matchedAgent = tenant.agents[0];
+  let selectedAgent = null;
 
-  const assignedAgentId = matchedAgent ? matchedAgent.id : null;
-  const assignedAgentName = matchedAgent ? matchedAgent.name : null;
+  if (matchingAgents.length > 0) {
+    // Ordenar por MENOR número de carritos asignados
+    matchingAgents.sort((a, b) => a._count.assignedCarts - b._count.assignedCarts);
+    selectedAgent = matchingAgents[0];
+  } else if (tenant.agents.length > 0) {
+    const allSorted = [...tenant.agents].sort((a, b) => a._count.assignedCarts - b._count.assignedCarts);
+    selectedAgent = allSorted[0];
+  }
+
+  const assignedAgentId = selectedAgent ? selectedAgent.id : null;
+  const assignedAgentName = selectedAgent ? selectedAgent.name : null;
 
   try {
     const holdedResult = await holdedService.createOpportunity(payload, {
@@ -211,7 +234,13 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
 
     await prisma.cartLog.upsert({
       where: { tenantId_shopifyCartId: { tenantId: tenant.id, shopifyCartId: BigInt(payload.id) } },
-      update: { status: 'QUALIFIED', holdedDealId, cartAmount, agentId: assignedAgentId, assignedToName: assignedAgentName },
+      update: {
+        status: 'QUALIFIED',
+        holdedDealId,
+        cartAmount,
+        agentId: assignedAgentId,
+        assignedToName: assignedAgentName
+      },
       create: {
         tenantId: tenant.id,
         shopifyCartId: BigInt(payload.id),
@@ -229,13 +258,18 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
       }
     });
 
-    return reply.status(200).send({ status: 'success', cartId: payload.id, assignedTo: assignedAgentName });
+    return reply.status(200).send({
+      status: 'success',
+      cartId: payload.id,
+      cartAmount,
+      assignedTo: assignedAgentName
+    });
   } catch (error: any) {
-    return reply.status(500).send({ status: 'error', message: 'Error Holded' });
+    return reply.status(500).send({ status: 'error', message: 'Error procesando lead' });
   }
 });
 
-// 2. NUEVO WEBHOOK: Pedido Creado / Pagado en Shopify (SEGUIMIENTO AUTOMÁTICO DE CIERRE)
+// WEBHOOK SHOPIFY: PEDIDOS PAGADOS
 app.post('/api/webhooks/shopify/:tenantId/orders', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   const order = request.body as any;
@@ -243,13 +277,9 @@ app.post('/api/webhooks/shopify/:tenantId/orders', async (request, reply) => {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) return reply.status(404).send({ error: 'Tenant no encontrado' });
 
-  // Shopify suele enviar el checkout_id asociado al pedido
   const checkoutId = order.checkout_id ? BigInt(order.checkout_id) : null;
   const orderEmail = order.email || order.customer?.email;
 
-  app.log.info(`[Pedido Pagado] Recibido Order #${order.id} | CheckoutId: ${checkoutId} | Email: ${orderEmail}`);
-
-  // Buscar si existía un carrito calificado previo
   let cart = null;
   if (checkoutId) {
     cart = await prisma.cartLog.findFirst({
@@ -257,7 +287,6 @@ app.post('/api/webhooks/shopify/:tenantId/orders', async (request, reply) => {
     });
   }
 
-  // Si no coincidió por checkout_id, buscar por email reciente
   if (!cart && orderEmail) {
     cart = await prisma.cartLog.findFirst({
       where: { tenantId, customerEmail: orderEmail, status: 'QUALIFIED' },
@@ -266,9 +295,6 @@ app.post('/api/webhooks/shopify/:tenantId/orders', async (request, reply) => {
   }
 
   if (cart) {
-    app.log.info(`🎉 [VENTA RECUPERADA] Carrito #${cart.shopifyCartId} pagado en Pedido #${order.id}`);
-
-    // 1. Actualizar carrito a RECUPERADO
     await prisma.cartLog.update({
       where: { id: cart.id },
       data: {
@@ -278,7 +304,6 @@ app.post('/api/webhooks/shopify/:tenantId/orders', async (request, reply) => {
       }
     });
 
-    // 2. Mover oportunidad a "Ganada" en Holded CRM
     if (cart.holdedDealId) {
       await holdedService.markOpportunityWon(
         cart.holdedDealId,
@@ -290,14 +315,14 @@ app.post('/api/webhooks/shopify/:tenantId/orders', async (request, reply) => {
     return reply.status(200).send({ status: 'recovered', cartId: cart.id, orderId: order.id });
   }
 
-  return reply.status(200).send({ status: 'ignored', message: 'No match with qualified abandoned checkout' });
+  return reply.status(200).send({ status: 'ignored', message: 'No match' });
 });
 
 const start = async () => {
   try {
     const port = Number(process.env.PORT) || 3000;
     await app.listen({ port, host: '0.0.0.0' });
-    console.log(`CartRevive Core corriendo en puerto ${port}`);
+    console.log(`CartRevive Core listo en puerto ${port}`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
