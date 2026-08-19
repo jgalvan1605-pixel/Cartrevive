@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CartRevive - Portal Comercial & Cierre</title>
+  <title>CartRevive - Portal Comercial</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-20 md:pb-8">
 
-  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-20 px-6 py-3 flex justify-between items-center">
-    <div class="flex items-center space-x-6">
+  <!-- HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 md:px-6 py-3 flex justify-between items-center">
+    <div class="flex items-center space-x-3 md:space-x-6">
       <div class="flex items-center space-x-3">
         <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
           <i class="fa-solid fa-headset"></i>
         </div>
         <div>
-          <h1 class="text-base font-semibold text-white" id="tenantName">Portal Comercial</h1>
-          <p class="text-[11px] text-slate-400">Atención Directa & Cierre de Ventas</p>
+          <h1 class="text-sm md:text-base font-semibold text-white truncate max-w-[140px] md:max-w-none" id="tenantName">Portal Comercial</h1>
+          <p class="text-[10px] md:text-[11px] text-slate-400">Gestión de Leads</p>
         </div>
       </div>
 
+      <!-- Navegación Desktop -->
       <nav class="hidden md:flex items-center space-x-2 text-xs font-medium">
         <a href="/dashboard.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
           <i class="fa-solid fa-chart-line mr-1.5"></i> Dashboard
@@ -34,26 +36,42 @@
       </nav>
     </div>
 
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-2">
       <button onclick="logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-300 rounded-lg text-xs font-medium transition border border-slate-700">
-        <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Salir
+        <i class="fa-solid fa-arrow-right-from-bracket md:mr-1"></i> <span class="hidden md:inline">Salir</span>
       </button>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVIL -->
+  <div class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 z-40 px-6 py-2 flex justify-between items-center text-xs">
+    <a href="/dashboard.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white">
+      <i class="fa-solid fa-chart-line text-base"></i>
+      <span class="text-[10px] font-medium">Dashboard</span>
+    </a>
+    <a href="/sales.html" class="flex flex-col items-center gap-1 text-indigo-400">
+      <i class="fa-solid fa-headset text-base"></i>
+      <span class="text-[10px] font-medium">Comerciales</span>
+    </a>
+    <a href="/integrations.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white">
+      <i class="fa-solid fa-plug text-base"></i>
+      <span class="text-[10px] font-medium">Conexiones</span>
+    </a>
+  </div>
 
-    <!-- SECCIÓN: CONFIGURACIÓN RÁPIDA (COMERCIALES + PLANTILLA WHATSAPP) -->
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+
+    <!-- SECCIÓN: CONFIGURACIÓN RÁPIDA -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- 1. Gestión de Equipo Comercial (7 cols) -->
-      <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <!-- 1. Gestión de Equipo Comercial -->
+      <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 space-y-4 shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-users-gear text-indigo-400"></i> Equipo & Reglas de Rango (€)
             </h2>
-            <p class="text-xs text-slate-400">Asignación automática de carritos según su valor.</p>
+            <p class="text-[11px] text-slate-400">Asignación automática de carritos.</p>
           </div>
           <button onclick="openAgentModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/20">
             <i class="fa-solid fa-plus text-[10px]"></i> Añadir
@@ -64,26 +82,25 @@
         </div>
       </div>
 
-      <!-- 2. Editor de Plantilla de WhatsApp (5 cols) -->
-      <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
+      <!-- 2. Editor de Plantilla de WhatsApp -->
+      <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 space-y-3 shadow-xl flex flex-col justify-between">
         <div class="space-y-2">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
               <i class="fa-brands fa-whatsapp text-emerald-400"></i> Plantilla WhatsApp
             </h2>
-            <span class="text-[10px] text-slate-400">Variables dinámicas</span>
+            <span class="text-[10px] text-slate-400">Variables</span>
           </div>
-          <textarea id="waTemplateInput" rows="3" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500 leading-relaxed resize-none" placeholder="Hola {nombre}..."></textarea>
+          <textarea id="waTemplateInput" rows="3" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500 leading-relaxed resize-none"></textarea>
           <div class="flex flex-wrap gap-1 text-[10px] text-slate-400">
             <span class="px-1.5 py-0.5 bg-slate-800 rounded text-indigo-300 font-mono cursor-pointer" onclick="insertTag('{nombre}')">{nombre}</span>
             <span class="px-1.5 py-0.5 bg-slate-800 rounded text-indigo-300 font-mono cursor-pointer" onclick="insertTag('{monto}')">{monto}</span>
-            <span class="px-1.5 py-0.5 bg-slate-800 rounded text-indigo-300 font-mono cursor-pointer" onclick="insertTag('{moneda}')">{moneda}</span>
             <span class="px-1.5 py-0.5 bg-slate-800 rounded text-indigo-300 font-mono cursor-pointer" onclick="insertTag('{articulos}')">{articulos}</span>
             <span class="px-1.5 py-0.5 bg-slate-800 rounded text-indigo-300 font-mono cursor-pointer" onclick="insertTag('{link}')">{link}</span>
           </div>
         </div>
         <div class="flex justify-end pt-2 border-t border-slate-800">
-          <button onclick="saveWhatsappTemplate()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
+          <button onclick="saveWhatsappTemplate()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
             <i class="fa-regular fa-floppy-disk"></i> Guardar Mensaje
           </button>
         </div>
@@ -91,48 +108,46 @@
 
     </div>
 
-    <!-- SECCIÓN: BANDEJA DE LEADS EN CALIENTE -->
+    <!-- SECCIÓN: BANDEJA DE LEADS -->
     <div class="space-y-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <!-- Filtro Comercial -->
-          <select id="agentFilter" onchange="renderCards()" class="bg-slate-950 border border-slate-700 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <select id="agentFilter" onchange="renderCards()" class="w-full sm:w-auto bg-slate-950 border border-slate-700 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500 font-medium">
             <option value="ALL">Todos los Comerciales</option>
           </select>
 
-          <!-- Filtro Estado -->
-          <select id="statusFilter" onchange="renderCards()" class="bg-slate-950 border border-slate-700 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer">
+          <select id="statusFilter" onchange="renderCards()" class="w-full sm:w-auto bg-slate-950 border border-slate-700 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500 font-medium">
             <option value="ALL">Todos los Estados</option>
             <option value="QUALIFIED">En Gestión (Pendientes)</option>
             <option value="RECOVERED">Ventas Recuperadas (Pagadas)</option>
           </select>
         </div>
 
-        <div class="flex items-center gap-3 w-full md:w-auto">
+        <div class="flex items-center gap-2 w-full md:w-auto">
           <div class="relative w-full md:w-64">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
-            <input id="searchInput" type="text" onkeyup="renderCards()" placeholder="Buscar cliente, tel o carrito..." class="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
+            <input id="searchInput" type="text" onkeyup="renderCards()" placeholder="Buscar cliente..." class="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
           </div>
-          <button onclick="loadAll()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1">
+          <button onclick="loadAll()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
         </div>
       </div>
 
       <!-- Grid de Oportunidades -->
-      <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <div class="col-span-full py-12 text-center text-slate-500 text-sm">Cargando oportunidades...</div>
       </div>
     </div>
 
   </main>
 
-  <!-- MODAL: VISOR DE LLAMADA TELEFÓNICA -->
+  <!-- MODAL: VISOR DE LLAMADA -->
   <div id="callModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
       <button onclick="closeCallModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
 
-      <div class="w-16 h-16 rounded-full bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl mx-auto shadow-inner">
+      <div class="w-14 h-14 rounded-full bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl mx-auto">
         <i class="fa-solid fa-phone"></i>
       </div>
 
@@ -141,70 +156,67 @@
         <p class="text-xs text-slate-400">Contacto telefónico directo</p>
       </div>
 
-      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
-        <div class="text-2xl font-mono font-bold text-emerald-400 tracking-wider" id="callPhoneNumber">+34 000 000 000</div>
+      <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+        <div class="text-xl font-mono font-bold text-emerald-400" id="callPhoneNumber">+34 000 000 000</div>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
-        <button onclick="copyCallNumber()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
-          <i class="fa-regular fa-copy"></i> Copiar
+        <button onclick="copyCallNumber()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition">
+          <i class="fa-regular fa-copy mr-1"></i> Copiar
         </button>
-        <a id="callDirectLink" href="#" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-600/30">
+        <a id="callDirectLink" href="#" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-phone"></i> Marcar
         </a>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: ASISTENTE DE RECUPERACIÓN DE CARRITO -->
+  <!-- MODAL: ASISTENTE DE RECUPERACIÓN -->
   <div id="recoveryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-5 md:p-6 space-y-4 shadow-2xl relative">
       <button onclick="closeRecoveryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
 
-      <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
-        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-lg">
+      <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-base">
           <i class="fa-solid fa-cart-shopping"></i>
         </div>
         <div>
-          <h3 class="text-base font-bold text-white">Asistente de Recuperación de Carrito</h3>
-          <p class="text-xs text-slate-400" id="recModalSubtitle">Herramientas de cierre para el comercial</p>
+          <h3 class="text-sm md:text-base font-bold text-white">Asistente de Recuperación</h3>
+          <p class="text-[11px] text-slate-400" id="recModalSubtitle">Checkout de Shopify</p>
         </div>
       </div>
 
-      <!-- Enlace directo -->
-      <div class="space-y-2">
-        <label class="block text-xs font-semibold text-slate-300">Enlace de Pago Directo (Checkout de Shopify)</label>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-300">Enlace de Pago Directo</label>
         <div class="flex gap-2">
           <input id="recModalUrl" type="text" readonly class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-indigo-300 focus:outline-none">
-          <button onclick="copyRecUrl()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1">
+          <button onclick="copyRecUrl()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition">
             <i class="fa-regular fa-copy"></i>
           </button>
         </div>
       </div>
 
-      <!-- Cupones Rápidos de Descuento -->
-      <div class="space-y-2">
-        <label class="block text-xs font-semibold text-slate-300">Generar Enlace con Descuento Inmediato</label>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-300">Cupones de Descuento</label>
         <div class="grid grid-cols-3 gap-2">
-          <button onclick="applyDiscountToLink('PROMO5', 5)" class="p-2.5 bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl text-xs text-center transition">
+          <button onclick="applyDiscountToLink('PROMO5')" class="p-2 bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl text-xs text-center transition">
             <div class="font-bold text-white">-5% Dto</div>
-            <div class="text-[10px] text-slate-500 font-mono">PROMO5</div>
+            <div class="text-[9px] text-slate-500 font-mono">PROMO5</div>
           </button>
-          <button onclick="applyDiscountToLink('RECUPERA10', 10)" class="p-2.5 bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl text-xs text-center transition">
+          <button onclick="applyDiscountToLink('RECUPERA10')" class="p-2 bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl text-xs text-center transition">
             <div class="font-bold text-emerald-400">-10% Dto</div>
-            <div class="text-[10px] text-slate-500 font-mono">RECUPERA10</div>
+            <div class="text-[9px] text-slate-500 font-mono">RECUPERA10</div>
           </button>
-          <button onclick="applyDiscountToLink('ENVIOGRATIS', 0)" class="p-2.5 bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl text-xs text-center transition">
-            <div class="font-bold text-indigo-400">Envío Gratis</div>
-            <div class="text-[10px] text-slate-500 font-mono">ENVIOGRATIS</div>
+          <button onclick="applyDiscountToLink('ENVIOGRATIS')" class="p-2 bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl text-xs text-center transition">
+            <div class="font-bold text-indigo-400">Envío 0€</div>
+            <div class="text-[9px] text-slate-500 font-mono">ENVIOGRATIS</div>
           </button>
         </div>
       </div>
 
-      <!-- Botones de Acción -->
-      <div class="pt-4 border-t border-slate-800 flex justify-between gap-3">
-        <a id="recModalOpenBtn" href="#" target="_blank" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Checkout en el Navegador
+      <div class="pt-3 border-t border-slate-800">
+        <a id="recModalOpenBtn" href="#" target="_blank" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Checkout
         </a>
       </div>
     </div>
@@ -212,36 +224,36 @@
 
   <!-- MODAL: AÑADIR COMERCIAL -->
   <div id="agentModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
-      <button onclick="closeAgentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      <h3 class="text-base font-bold text-white">Nuevo Comercial y Rango Asignado</h3>
-      <div class="space-y-3">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-3.5 shadow-2xl relative">
+      <button onclick="closeAgentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="text-sm font-bold text-white">Nuevo Comercial y Rango</h3>
+      <div class="space-y-2.5">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Nombre Completo *</label>
           <input id="newAgentName" type="text" placeholder="Ej: Marcos García" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Teléfono Directo</label>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Teléfono</label>
           <input id="newAgentPhone" type="text" placeholder="+34 600 000 000" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Email</label>
           <input id="newAgentEmail" type="email" placeholder="marcos@mitienda.com" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
         </div>
-        <div class="grid grid-cols-2 gap-3 pt-1">
+        <div class="grid grid-cols-2 gap-2 pt-1">
           <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Monto Mínimo (€)</label>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Mínimo (€)</label>
             <input id="newAgentMin" type="number" value="150" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
           </div>
           <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Monto Máximo (€)</label>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Máximo (€)</label>
             <input id="newAgentMax" type="number" placeholder="Sin límite" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500">
           </div>
         </div>
       </div>
-      <div class="flex justify-end gap-2 pt-3">
-        <button onclick="closeAgentModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg font-medium">Cancelar</button>
-        <button onclick="saveNewAgent()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg font-semibold">Guardar Comercial</button>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeAgentModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 text-xs rounded-lg font-medium">Cancelar</button>
+        <button onclick="saveNewAgent()" class="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg font-semibold">Guardar</button>
       </div>
     </div>
   </div>
@@ -296,12 +308,12 @@
           : `Desde ${a.minAmount} € en adelante`;
 
         return `
-          <div class="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between gap-2">
-            <div class="space-y-0.5">
-              <div class="font-bold text-white text-xs flex items-center gap-1.5">
+          <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-2xl flex items-center justify-between gap-2">
+            <div class="space-y-0.5 truncate">
+              <div class="font-bold text-white text-xs flex items-center gap-1.5 truncate">
                 <i class="fa-solid fa-user-tie text-indigo-400 text-[10px]"></i> ${a.name}
               </div>
-              <div class="text-[10px] text-slate-400">${a.phone || a.email || 'Sin contacto'}</div>
+              <div class="text-[10px] text-slate-400 truncate">${a.phone || a.email || 'Sin contacto'}</div>
               <span class="inline-block text-[9px] font-mono font-semibold px-1.5 py-0.2 bg-indigo-500/10 text-indigo-300 rounded border border-indigo-500/20">
                 ${rangeTxt}
               </span>
@@ -349,7 +361,6 @@
         const isRecovered = c.status === 'RECOVERED';
         const phoneClean = (c.customerPhone || '').replace(/[^0-9+]/g, '');
 
-        // Generar Mensaje de WhatsApp Dinámico usando la plantilla personalizada
         let msg = whatsappTemplate
           .replace('{nombre}', c.customerName || 'Hola')
           .replace('{monto}', c.cartAmount.toFixed(2))
@@ -364,55 +375,55 @@
         `).join('');
 
         return `
-          <div class="bg-slate-900 border ${isRecovered ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-slate-800'} rounded-3xl p-5 space-y-4 shadow-sm flex flex-col justify-between transition">
-            <div class="space-y-3">
+          <div class="bg-slate-900 border ${isRecovered ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-slate-800'} rounded-3xl p-4 md:p-5 space-y-3.5 shadow-sm flex flex-col justify-between transition">
+            <div class="space-y-2.5">
               <div class="flex justify-between items-start">
                 <span class="text-xs font-mono text-indigo-300">#${c.shopifyCartId}</span>
                 ${isRecovered 
-                  ? `<span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30"><i class="fa-solid fa-check"></i> Venta Cerrada</span>`
-                  : `<span class="text-lg font-bold text-emerald-400 font-mono">${c.cartAmount.toFixed(2)} ${c.currency}</span>`
+                  ? `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30"><i class="fa-solid fa-check"></i> Pagado</span>`
+                  : `<span class="text-base md:text-lg font-bold text-emerald-400 font-mono">${c.cartAmount.toFixed(2)} ${c.currency}</span>`
                 }
               </div>
 
               <div>
-                <h3 class="font-bold text-white text-base">${c.customerName || 'Cliente Anónimo'}</h3>
-                <p class="text-xs text-slate-400">${c.customerEmail || 'Sin email'}</p>
+                <h3 class="font-bold text-white text-sm md:text-base">${c.customerName || 'Cliente Anónimo'}</h3>
+                <p class="text-xs text-slate-400 truncate">${c.customerEmail || 'Sin email'}</p>
                 <p class="text-xs font-mono text-indigo-300 mt-0.5">${c.customerPhone || 'Sin teléfono'}</p>
               </div>
 
-              <div class="bg-slate-950/70 p-3 rounded-2xl border border-slate-800/80 text-xs text-slate-300 space-y-1">
-                <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Artículos:</div>
-                <div class="line-clamp-2" title="${c.itemsSummary}">${c.itemsSummary || 'Sin resumen'}</div>
+              <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800/80 text-xs text-slate-300 space-y-1">
+                <div class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">Artículos:</div>
+                <div class="line-clamp-2 text-[11px]" title="${c.itemsSummary}">${c.itemsSummary || 'Sin resumen'}</div>
               </div>
 
-              <div class="pt-1">
-                <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Comercial:</label>
-                <select onchange="reassignCart(${c.id}, this.value)" class="w-full bg-slate-950 border border-slate-700 text-xs text-indigo-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer">
+              <div class="pt-0.5">
+                <label class="block text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Comercial:</label>
+                <select onchange="reassignCart(${c.id}, this.value)" class="w-full bg-slate-950 border border-slate-700 text-xs text-indigo-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer">
                   ${agentOptions}
                 </select>
               </div>
             </div>
 
-            <!-- Botones de Acción Interactivos -->
-            <div class="pt-3 border-t border-slate-800/80 space-y-2">
+            <!-- Botones de Acción -->
+            <div class="pt-2.5 border-t border-slate-800/80 space-y-2">
               ${isRecovered ? `
-                <div class="py-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold text-center">
-                  <i class="fa-solid fa-circle-check mr-1"></i> Pedido Pagado ${c.shopifyOrderId ? `(#${c.shopifyOrderId})` : ''}
+                <div class="py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold text-center">
+                  <i class="fa-solid fa-circle-check mr-1"></i> Pedido #${c.shopifyOrderId || ''}
                 </div>
               ` : `
                 <div class="grid grid-cols-2 gap-2">
                   ${phoneClean ? `
-                    <button onclick="openCallModal('${c.customerName || 'Cliente'}', '${c.customerPhone}')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                    <button onclick="openCallModal('${c.customerName || 'Cliente'}', '${c.customerPhone}')" class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                       <i class="fa-solid fa-phone text-indigo-400"></i> Llamar
                     </button>
-                    <a href="${waLink}" target="_blank" class="py-2 px-3 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                    <a href="${waLink}" target="_blank" class="py-2 px-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                       <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
                     </a>
                   ` : `<div class="col-span-2 text-center text-xs text-slate-500 py-1">Sin teléfono</div>`}
                 </div>
 
                 ${c.recoveryUrl ? `
-                  <button onclick="openRecoveryModal('${c.shopifyCartId}', '${c.customerName || 'Cliente'}', '${c.recoveryUrl}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-lg shadow-indigo-600/20">
+                  <button onclick="openRecoveryModal('${c.shopifyCartId}', '${c.customerName || 'Cliente'}', '${c.recoveryUrl}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-lg shadow-indigo-600/20">
                     <i class="fa-solid fa-cart-shopping"></i> Recuperar Carrito
                   </button>
                 ` : ''}
@@ -457,7 +468,7 @@
       const discountedUrl = `${currentRawRecoveryUrl}${separator}discount=${code}`;
       document.getElementById('recModalUrl').value = discountedUrl;
       document.getElementById('recModalOpenBtn').href = discountedUrl;
-      alert(`Cupón [${code}] aplicado al enlace del cliente`);
+      alert(`Cupón [${code}] aplicado al enlace`);
     }
 
     // Plantilla WhatsApp
@@ -474,7 +485,7 @@
         body: JSON.stringify({ whatsappTemplate: val })
       });
       whatsappTemplate = val;
-      alert('Plantilla de WhatsApp guardada.');
+      alert('Plantilla guardada.');
       renderCards();
     }
 
@@ -495,7 +506,7 @@
       const minAmount = document.getElementById('newAgentMin').value;
       const maxAmount = document.getElementById('newAgentMax').value;
 
-      if (!name) return alert('Por favor escribe el nombre del comercial.');
+      if (!name) return alert('El nombre es obligatorio.');
 
       const res = await fetch('/api/agents', {
         method: 'POST',
@@ -513,7 +524,7 @@
     }
 
     async function deleteAgent(agentId) {
-      if (!confirm('¿Deseas eliminar este comercial de las reglas?')) return;
+      if (!confirm('¿Deseas eliminar este comercial?')) return;
       await fetch(`/api/agents/${agentId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
