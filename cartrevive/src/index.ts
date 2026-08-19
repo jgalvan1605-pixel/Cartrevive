@@ -33,7 +33,7 @@ app.decorate('authenticate', async (request: any, reply: any) => {
   }
 });
 
-// Health check para verificar despliegues
+// Health check
 app.get('/api/health', async () => ({ status: 'ok', version: '2.0.0-telegram-autolink' }));
 
 // Auth: Register
@@ -139,12 +139,19 @@ app.post('/api/telegram/webhook', async (request: any, reply) => {
               }
             });
 
+            // Envío con doble garantía (Llamada directa API + Retorno de Webhook)
             await sendTelegramMessage(
               botToken,
               chatId,
               `✅ <b>¡Conexión completada con éxito!</b>\n\nHola ${senderName}, este chat ha quedado vinculado a la cuenta de <b>${tenant.name}</b>.\n\nA partir de este instante recibirás aquí las alertas de carritos abandonados de alto valor con botones de llamada y WhatsApp directo.`
             );
-            return reply.send({ status: 'ok', linkedTenant: tenant.id });
+
+            return reply.send({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: `✅ <b>¡Conexión completada con éxito!</b>\n\nHola ${senderName}, este chat ha quedado vinculado a la cuenta de <b>${tenant.name}</b>.\n\nA partir de este instante recibirás aquí las alertas de carritos abandonados de alto valor con botones de llamada y WhatsApp directo.`,
+              parse_mode: 'HTML'
+            });
           }
         } catch (err) {
           console.error('Error vinculando Telegram:', err);
@@ -156,6 +163,13 @@ app.post('/api/telegram/webhook', async (request: any, reply) => {
         chatId,
         `👋 <b>Bienvenido al Bot de CartRevive</b>\n\nPara vincular tu cuenta, abre tu panel en <a href="https://cartrevive.onrender.com/integrations.html">Integraciones</a> y pulsa en <b>Vincular mi Telegram en 1 Clic</b>.`
       );
+
+      return reply.send({
+        method: 'sendMessage',
+        chat_id: chatId,
+        text: `👋 <b>Bienvenido al Bot de CartRevive</b>\n\nPara vincular tu cuenta, abre tu panel en <a href="https://cartrevive.onrender.com/integrations.html">Integraciones</a> y pulsa en <b>Vincular mi Telegram en 1 Clic</b>.`,
+        parse_mode: 'HTML'
+      });
     }
   }
 
