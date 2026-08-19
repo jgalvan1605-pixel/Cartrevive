@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CartRevive - Integraciones & Conexiones API</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-20 px-6 py-3 flex justify-between items-center">
+    <div class="flex items-center space-x-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-plug"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-semibold text-white" id="tenantName">Centro de Integraciones</h1>
+          <p class="text-[11px] text-slate-400">Shopify & Holded CRM Bridge</p>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center space-x-2 text-xs font-medium">
+        <a href="/dashboard.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <i class="fa-solid fa-chart-line mr-1.5"></i> Dashboard
+        </a>
+        <a href="/sales.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <i class="fa-solid fa-headset mr-1.5"></i> Portal Comercial
+        </a>
+        <a href="/integrations.html" class="px-3 py-1.5 rounded-lg bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
+          <i class="fa-solid fa-plug mr-1.5"></i> Integraciones & APIs
+        </a>
+      </nav>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <button onclick="logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-300 rounded-lg text-xs font-medium transition border border-slate-700">
+        <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Salir
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-10 space-y-12">
+
+    <!-- 1. BLOQUE SHOPIFY -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-xl">
+      <div class="flex items-center gap-4 border-b border-slate-800 pb-6">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl">
+          <i class="fa-brands fa-shopify"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-white">1. Conexión con Shopify</h2>
+          <p class="text-xs text-slate-400">Configura los dos webhooks para detectar abandonos y registrar compras recuperadas</p>
+        </div>
+      </div>
+
+      <!-- Webhook 1: Abandonos -->
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">A) Webhook para Carritos Abandonados (Evento: Creación de pantalla de pago)</label>
+        </div>
+        <div class="flex items-center gap-3">
+          <input id="shopifyWebhookUrl" type="text" readonly class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-indigo-300 focus:outline-none" value="...">
+          <button onclick="copyToClipboard('shopifyWebhookUrl')" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+            <i class="fa-regular fa-copy"></i> Copiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Webhook 2: Pedidos -->
+      <div class="space-y-3 pt-2 border-t border-slate-800/80">
+        <div class="flex justify-between items-center">
+          <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider">B) Webhook para Ventas / Pedidos Cerrados (Evento: Creación de pedido)</label>
+        </div>
+        <div class="flex items-center gap-3">
+          <input id="shopifyOrdersWebhookUrl" type="text" readonly class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-emerald-300 focus:outline-none" value="...">
+          <button onclick="copyToClipboard('shopifyOrdersWebhookUrl')" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+            <i class="fa-regular fa-copy"></i> Copiar
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-6 space-y-3 text-xs text-slate-300 leading-relaxed">
+        <h4 class="font-bold text-white text-sm flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-indigo-400"></i> Pasos en Shopify Admin (<code class="text-indigo-300">admin.shopify.com</code>):
+        </h4>
+        <ol class="list-decimal list-inside space-y-2 text-slate-400 pt-1">
+          <li>Ve a <strong>Configuración</strong> $\rightarrow$ <strong>Notificaciones</strong> $\rightarrow$ <strong>Webhooks</strong>.</li>
+          <li>Crea el primer Webhook con evento <strong class="text-white">"Creación de pantalla de pago"</strong> pegando la URL (A).</li>
+          <li>Crea el segundo Webhook con evento <strong class="text-white">"Creación de pedido"</strong> pegando la URL (B).</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- 2. BLOQUE HOLDED CRM -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-xl">
+      <div class="flex items-center gap-4 border-b border-slate-800 pb-6">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl">
+          <i class="fa-solid fa-briefcase"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-white">2. Conexión con Holded CRM</h2>
+          <p class="text-xs text-slate-400">Sincronización de Leads en embudo y cierre automático de deals</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Holded API Key *</label>
+          <input id="cfgApiKey" type="password" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="Ej: 34f8e...7a9">
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Umbral Económico Mínimo (€) *</label>
+          <input id="cfgThreshold" type="number" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="150">
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Funnel ID (Embudo)</label>
+          <input id="cfgFunnelId" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="ID del Embudo">
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Stage ID Inicial (Lead Entrante)</label>
+          <input id="cfgStageId" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="ID Fase Inicial">
+        </div>
+
+        <div class="col-span-full space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Stage ID Fase "Ganada / Won" (Cierre de Venta)</label>
+          <input id="cfgWonStageId" type="text" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="ID Fase Ganada en Holded">
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-4 border-t border-slate-800">
+        <button onclick="saveHoldedConfig()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/30">
+          Guardar Configuración CRM
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const token = localStorage.getItem('cartrevive_token');
+    if (!token) window.location.href = '/';
+
+    async function init() {
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) return logout();
+        const user = await res.json();
+
+        document.getElementById('tenantName').innerText = user.name;
+        document.getElementById('shopifyWebhookUrl').value = `${window.location.origin}/api/webhooks/shopify/${user.id}`;
+        document.getElementById('shopifyOrdersWebhookUrl').value = `${window.location.origin}/api/webhooks/shopify/${user.id}/orders`;
+        document.getElementById('cfgThreshold').value = user.minThreshold;
+        document.getElementById('cfgApiKey').value = user.holdedApiKey || '';
+        document.getElementById('cfgFunnelId').value = user.holdedFunnelId || '';
+        document.getElementById('cfgStageId').value = user.holdedStageId || '';
+        document.getElementById('cfgWonStageId').value = user.holdedWonStageId || '';
+      } catch (e) {
+        logout();
+      }
+    }
+
+    async function saveHoldedConfig() {
+      const minThreshold = parseFloat(document.getElementById('cfgThreshold').value);
+      const holdedApiKey = document.getElementById('cfgApiKey').value;
+      const holdedFunnelId = document.getElementById('cfgFunnelId').value;
+      const holdedStageId = document.getElementById('cfgStageId').value;
+      const holdedWonStageId = document.getElementById('cfgWonStageId').value;
+
+      await fetch('/api/tenant/config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ minThreshold, holdedApiKey, holdedFunnelId, holdedStageId, holdedWonStageId })
+      });
+
+      alert('Configuración guardada correctamente.');
+    }
+
+    function copyToClipboard(elementId) {
+      const input = document.getElementById(elementId);
+      navigator.clipboard.writeText(input.value);
+      alert('URL copiada al portapapeles');
+    }
+
+    function logout() {
+      localStorage.removeItem('cartrevive_token');
+      window.location.href = '/';
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CartRevive - Panel de Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-20 px-6 py-3 flex justify-between items-center">
+    <div class="flex items-center space-x-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-semibold text-white" id="tenantName">Cargando...</h1>
+          <p class="text-[11px] text-slate-400" id="tenantPlan">Plan Pro Commerce</p>
+        </div>
+      </div>
+
+      <!-- Navegación Modular -->
+      <nav class="hidden md:flex items-center space-x-2 text-xs font-medium">
+        <a href="/dashboard.html" class="px-3 py-1.5 rounded-lg bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
+          <i class="fa-solid fa-chart-line mr-1.5"></i> Dashboard
+        </a>
+        <a href="/sales.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <i class="fa-solid fa-headset mr-1.5"></i> Portal Comercial
+        </a>
+        <a href="/integrations.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <i class="fa-solid fa-plug mr-1.5"></i> Integraciones & APIs
+        </a>
+      </nav>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <button onclick="logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-300 rounded-lg text-xs font-medium transition border border-slate-700">
+        <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Salir
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+    
+    <!-- Métricas Clave de Negocio -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <!-- 1. Ventas Reales Recuperadas -->
+      <div class="bg-gradient-to-br from-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-lg shadow-emerald-950/20">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Recuperado Real</span>
+          <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl text-xs"><i class="fa-solid fa-sack-dollar"></i></span>
+        </div>
+        <div class="mt-2 text-2xl font-extrabold text-white font-mono" id="statRecoveredAmount">0.00 €</div>
+        <div class="text-xs text-emerald-400/80 mt-1 font-medium" id="statRecoveredCount">0 ventas cerradas</div>
+      </div>
+
+      <!-- 2. Pipeline en Seguimiento -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Pipeline en Gestión</span>
+          <span class="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl text-xs"><i class="fa-solid fa-spinner"></i></span>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-indigo-400 font-mono" id="statPipelineAmount">0.00 €</div>
+        <div class="text-xs text-slate-500 mt-1" id="statPipelineCount">0 oportunidades en curso</div>
+      </div>
+
+      <!-- 3. Tasa de Conversión -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tasa de Cierre</span>
+          <span class="p-2 bg-violet-500/10 text-violet-400 rounded-xl text-xs"><i class="fa-solid fa-bullseye"></i></span>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-white font-mono" id="statConversionRate">0 %</div>
+        <div class="text-xs text-slate-500 mt-1">Efectividad del equipo</div>
+      </div>
+
+      <!-- 4. Carritos Omitidos -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Omitidos</span>
+          <span class="p-2 bg-slate-800 text-slate-400 rounded-xl text-xs"><i class="fa-solid fa-filter"></i></span>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-slate-400 font-mono" id="statIgnored">0</div>
+        <div class="text-xs text-slate-500 mt-1">Inferiores al umbral</div>
+      </div>
+    </div>
+
+    <!-- Tabla General de Auditoría -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+        <div>
+          <h2 class="text-base font-semibold text-white">Historial de Carritos y Órdenes</h2>
+          <p class="text-xs text-slate-400">Seguimiento automático de carritos y compras completadas</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/sales.html" class="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+            <i class="fa-solid fa-headset"></i> Portal Ventas
+          </a>
+          <button onclick="loadLogs()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+            <i class="fa-solid fa-rotate-right"></i> Actualizar
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-950/50 text-xs uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="px-6 py-3.5">ID / Pedido</th>
+              <th class="px-6 py-3.5">Cliente</th>
+              <th class="px-6 py-3.5">Monto</th>
+              <th class="px-6 py-3.5">Comercial</th>
+              <th class="px-6 py-3.5">Estado</th>
+              <th class="px-6 py-3.5 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody" class="divide-y divide-slate-800">
+            <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Cargando registros...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('cartrevive_token');
+    if (!token) window.location.href = '/';
+
+    async function initDashboard() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return logout();
+
+        const user = await res.json();
+        document.getElementById('tenantName').innerText = user.name;
+        document.getElementById('tenantPlan').innerText = `Plan ${user.plan}`;
+
+        await loadLogs();
+      } catch (err) {
+        logout();
+      }
+    }
+
+    async function loadLogs() {
+      try {
+        const res = await fetch('/api/tenant/logs', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const logs = await res.json();
+
+        // Clasificación de logs
+        const recovered = logs.filter(l => l.status === 'RECOVERED');
+        const qualified = logs.filter(l => l.status === 'QUALIFIED');
+        const ignored = logs.filter(l => l.status === 'IGNORED');
+
+        const recoveredTotal = recovered.reduce((acc, l) => acc + l.cartAmount, 0);
+        const pipelineTotal = qualified.reduce((acc, l) => acc + l.cartAmount, 0);
+        const totalOpportunities = recovered.length + qualified.length;
+        const convRate = totalOpportunities > 0 ? (recovered.length / totalOpportunities) * 100 : 0;
+
+        document.getElementById('statRecoveredAmount').innerText = `${recoveredTotal.toFixed(2)} €`;
+        document.getElementById('statRecoveredCount').innerText = `${recovered.length} pedidos recuperados`;
+        
+        document.getElementById('statPipelineAmount').innerText = `${pipelineTotal.toFixed(2)} €`;
+        document.getElementById('statPipelineCount').innerText = `${qualified.length} en gestión activa`;
+
+        document.getElementById('statConversionRate').innerText = `${convRate.toFixed(1)} %`;
+        document.getElementById('statIgnored').innerText = ignored.length;
+
+        const tbody = document.getElementById('logsTableBody');
+        if (logs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">No hay carritos registrados todavía.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = logs.map(log => {
+          let badge = '';
+          if (log.status === 'RECOVERED') {
+            badge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <i class="fa-solid fa-check-double"></i> Recuperado ${log.shopifyOrderId ? `(#${log.shopifyOrderId})` : ''}
+            </span>`;
+          } else if (log.status === 'QUALIFIED') {
+            badge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <i class="fa-solid fa-clock"></i> En Gestión CRM
+            </span>`;
+          } else {
+            badge = `<span class="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-400">Omitido</span>`;
+          }
+
+          const agentName = log.agent ? log.agent.name : (log.assignedToName || 'Sin Asignar');
+          const agentBadge = agentName !== 'Sin Asignar'
+            ? `<span class="inline-flex items-center gap-1 text-xs text-indigo-300 font-medium bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20"><i class="fa-solid fa-user-tie text-[10px]"></i> ${agentName}</span>`
+            : `<span class="text-xs text-slate-500">—</span>`;
+
+          return `
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="px-6 py-4 font-mono text-xs">
+                <div class="text-indigo-300 font-semibold">#${log.shopifyCartId}</div>
+                ${log.shopifyOrderId ? `<div class="text-[10px] text-emerald-400">Orden: #${log.shopifyOrderId}</div>` : ''}
+              </td>
+              <td class="px-6 py-4">
+                <div class="font-medium text-white">${log.customerName || 'Anónimo'}</div>
+                <div class="text-xs text-slate-400">${log.customerEmail || log.customerPhone || 'Sin contacto'}</div>
+              </td>
+              <td class="px-6 py-4 font-semibold text-white">${log.cartAmount.toFixed(2)} ${log.currency}</td>
+              <td class="px-6 py-4">${agentBadge}</td>
+              <td class="px-6 py-4">${badge}</td>
+              <td class="px-6 py-4 text-right">
+                ${log.recoveryUrl && log.status !== 'RECOVERED' ? `
+                  <a href="${log.recoveryUrl}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-lg text-xs font-medium border border-slate-700">
+                    Recuperar <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                  </a>
+                ` : (log.status === 'RECOVERED' ? '<span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i> Pagado</span>' : '—')}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('cartrevive_token');
+      window.location.href = '/';
+    }
+
+    initDashboard();
+    setInterval(loadLogs, 10000);
+  </script>
+</body>
+</html>
