@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export interface TelegramAlertData {
   cartId: string | number;
   customerName: string;
@@ -48,21 +50,15 @@ export async function sendTelegramAlert(
   }
 
   try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: 'HTML',
-        reply_markup: inlineKeyboard.length > 0 ? { inline_keyboard: inlineKeyboard } : undefined
-      })
+    const res = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'HTML',
+      reply_markup: inlineKeyboard.length > 0 ? { inline_keyboard: inlineKeyboard } : undefined
     });
-
-    const result = await res.json();
-    return result.ok === true;
-  } catch (error) {
-    console.error('Error enviando notificación a Telegram:', error);
+    return res.data.ok === true;
+  } catch (error: any) {
+    console.error('Error enviando notificación a Telegram:', error.response?.data || error.message);
     return false;
   }
 }
@@ -73,36 +69,24 @@ export async function sendTelegramMessage(
   text: string
 ): Promise<boolean> {
   try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: 'HTML'
-      })
+    const res = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML'
     });
-
-    const result = await res.json();
-
-    // Si Telegram rechaza el formato HTML por caracteres especiales, reenvía en texto plano
-    if (!result.ok) {
+    return res.data.ok === true;
+  } catch (error: any) {
+    console.error('Error enviando HTML a Telegram, reintentando texto plano:', error.response?.data || error.message);
+    try {
       const plainText = text.replace(/<[^>]*>?/gm, '');
-      const retryRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: plainText
-        })
+      const retryRes = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        chat_id: chatId,
+        text: plainText
       });
-      const retryResult = await retryRes.json();
-      return retryResult.ok === true;
+      return retryRes.data.ok === true;
+    } catch (retryError: any) {
+      console.error('Error final enviando mensaje a Telegram:', retryError.response?.data || retryError.message);
+      return false;
     }
-
-    return true;
-  } catch (error) {
-    console.error('Error enviando mensaje plano a Telegram:', error);
-    return false;
   }
 }
