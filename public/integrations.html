@@ -22,7 +22,6 @@
         </div>
       </div>
 
-      <!-- Navegación Desktop -->
       <nav class="hidden md:flex items-center space-x-2 text-xs font-medium">
         <a href="/dashboard.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
           <i class="fa-solid fa-chart-line mr-1.5"></i> Dashboard
@@ -61,19 +60,79 @@
 
   <main class="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10 space-y-8 md:space-y-12">
 
-    <!-- 1. BLOQUE SHOPIFY -->
+    <!-- 1. BLOQUE TELEGRAM: VINCULACIÓN EN 1 CLIC (SPEED-TO-LEAD) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-xl md:text-2xl">
+            <i class="fa-brands fa-telegram"></i>
+          </div>
+          <div>
+            <h2 class="text-base md:text-xl font-bold text-white">1. Notificaciones Flash en Telegram (Speed-to-Lead)</h2>
+            <p class="text-[11px] text-slate-400">Recibe alertas en menos de 5 segundos con botones de WhatsApp y llamada directa</p>
+          </div>
+        </div>
+        <span id="tgStatusBadge" class="px-3 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-xs font-bold flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-slate-500"></span> Desconectado
+        </span>
+      </div>
+
+      <!-- Estado: No Vinculado -->
+      <div id="tgUnlinkedBox" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-slate-950/70 border border-slate-800/80 rounded-2xl p-6">
+        <div class="md:col-span-2 space-y-3">
+          <h3 class="text-sm md:text-base font-bold text-white">Vincula tu Telegram en 3 segundos</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Pulsa el botón directo o escanea el código QR desde tu teléfono. Tu cuenta quedará sincronizada automáticamente y empezarás a recibir las fichas de los clientes al instante.
+          </p>
+          <div class="pt-2">
+            <a id="btnTelegramDirect" href="#" target="_blank" class="inline-flex items-center gap-2.5 px-5 py-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs md:text-sm rounded-xl shadow-lg shadow-sky-500/20 transition">
+              <i class="fa-brands fa-telegram text-base"></i> Vincular mi Telegram en 1 Clic
+            </a>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0">
+          <img id="qrTelegram" src="" alt="QR Telegram" class="w-32 h-32 rounded-xl bg-white p-2 border border-slate-700 shadow-inner">
+          <span class="text-[10px] text-slate-400 mt-2 font-medium">Escanea con la cámara del móvil</span>
+        </div>
+      </div>
+
+      <!-- Estado: Vinculado -->
+      <div id="tgLinkedBox" class="hidden bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Telegram Conectado y Activo</h4>
+              <p class="text-xs text-slate-400">Chat ID sincronizado: <span id="lblChatId" class="font-mono text-emerald-300">...</span></p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="testTelegramAlert()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+              <i class="fa-regular fa-paper-plane"></i> Enviar Alerta de Prueba
+            </button>
+            <button onclick="disconnectTelegram()" class="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-xs font-semibold transition">
+              Desvincular
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. BLOQUE SHOPIFY -->
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-8 space-y-5 shadow-xl">
       <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
         <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl md:text-2xl">
           <i class="fa-brands fa-shopify"></i>
         </div>
         <div>
-          <h2 class="text-base md:text-xl font-bold text-white">1. Conexión con Shopify</h2>
+          <h2 class="text-base md:text-xl font-bold text-white">2. Conexión con Shopify</h2>
           <p class="text-[11px] text-slate-400">Webhooks para capturar abandonos y ventas</p>
         </div>
       </div>
 
-      <!-- Webhook 1 -->
       <div class="space-y-2">
         <label class="block text-[11px] md:text-xs font-semibold text-slate-300 uppercase tracking-wider">A) Webhook Carritos Abandonados</label>
         <div class="flex items-center gap-2">
@@ -84,7 +143,6 @@
         </div>
       </div>
 
-      <!-- Webhook 2 -->
       <div class="space-y-2 pt-2 border-t border-slate-800/80">
         <label class="block text-[11px] md:text-xs font-semibold text-emerald-400 uppercase tracking-wider">B) Webhook Ventas Cerradas (Pedidos)</label>
         <div class="flex items-center gap-2">
@@ -104,57 +162,6 @@
           <li>Crea un webhook con evento <strong>"Creación de pantalla de pago"</strong> y pega la URL (A).</li>
           <li>Crea un segundo webhook con evento <strong>"Creación de pedido"</strong> y pega la URL (B).</li>
         </ol>
-      </div>
-    </div>
-
-    <!-- 2. BLOQUE TELEGRAM: SPEED-TO-LEAD (ALERTAS FLASH) -->
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-8 space-y-5 shadow-xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-xl md:text-2xl">
-            <i class="fa-brands fa-telegram"></i>
-          </div>
-          <div>
-            <h2 class="text-base md:text-xl font-bold text-white">2. Notificaciones Flash en Telegram (Speed-to-Lead)</h2>
-            <p class="text-[11px] text-slate-400">Avisa al móvil de tus comerciales al segundo con botones directos de llamada y WhatsApp</p>
-          </div>
-        </div>
-        <span class="hidden sm:inline-flex px-3 py-1 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-full text-xs font-bold">
-          ⚡ 0% Comisiones / 100% Gratis
-        </span>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-300">Telegram Bot Token *</label>
-          <input id="cfgTelegramToken" type="text" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-sky-500" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-300">Telegram Chat ID (o ID del Grupo) *</label>
-          <input id="cfgTelegramChatId" type="text" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-sky-500" placeholder="-1001234567890 o tu ID personal">
-        </div>
-      </div>
-
-      <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-4 text-xs text-slate-300 space-y-2">
-        <h4 class="font-bold text-white text-xs flex items-center gap-1.5">
-          <i class="fa-solid fa-graduation-cap text-sky-400"></i> ¿Cómo configurar tu Bot de Telegram en 2 minutos?
-        </h4>
-        <ol class="list-decimal list-inside space-y-1 text-slate-400 text-[11px]">
-          <li>Abre Telegram y busca el usuario oficial <strong>@BotFather</strong>.</li>
-          <li>Escribe <code class="text-sky-300 font-mono">/newbot</code>, asígnale un nombre (ej. <i>Alertas Akon Fitness</i>) y copia el <strong>Token</strong>.</li>
-          <li>Para tu <strong>Chat ID</strong>: busca en Telegram al bot <strong>@userinfobot</strong> (para chat privado) o añade tu bot a tu grupo comercial y consulta el ID con <strong>@RawDataBot</strong>.</li>
-          <li>Inicia una conversación con tu bot pulsando <strong>/start</strong> para autorizar el envío de mensajes.</li>
-        </ol>
-      </div>
-
-      <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-slate-800">
-        <button onclick="testTelegramAlert()" class="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2">
-          <i class="fa-regular fa-paper-plane"></i> Enviar Alerta de Prueba
-        </button>
-        <button onclick="saveTelegramConfig()" class="w-full sm:w-auto px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-sky-600/20">
-          Guardar Configuración Telegram
-        </button>
       </div>
     </div>
 
@@ -210,11 +217,20 @@
     const token = localStorage.getItem('cartrevive_token');
     if (!token) window.location.href = '/';
 
+    let currentUserId = null;
+    let currentChatId = null;
+
+    // Nombre del bot en Telegram (tu bot)
+    const BOT_USERNAME = "CartRevive_bot"; // Cambia al username de tu bot si es diferente
+
     async function init() {
       try {
         const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) return logout();
         const user = await res.json();
+
+        currentUserId = user.id;
+        currentChatId = user.telegramChatId;
 
         document.getElementById('tenantName').innerText = user.name;
         document.getElementById('shopifyWebhookUrl').value = `${window.location.origin}/api/webhooks/shopify/${user.id}`;
@@ -227,11 +243,34 @@
         document.getElementById('cfgStageId').value = user.holdedStageId || '';
         document.getElementById('cfgWonStageId').value = user.holdedWonStageId || '';
 
-        // Telegram
-        document.getElementById('cfgTelegramToken').value = user.telegramBotToken || '';
-        document.getElementById('cfgTelegramChatId').value = user.telegramChatId || '';
+        // Deep Link Telegram
+        const tgLink = `https://t.me/${BOT_USERNAME}?start=${user.id}`;
+        document.getElementById('btnTelegramDirect').href = tgLink;
+        document.getElementById('qrTelegram').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tgLink)}`;
+
+        renderTelegramState(user.telegramChatId);
       } catch (e) {
         logout();
+      }
+    }
+
+    function renderTelegramState(chatId) {
+      const badge = document.getElementById('tgStatusBadge');
+      const unlinkedBox = document.getElementById('tgUnlinkedBox');
+      const linkedBox = document.getElementById('tgLinkedBox');
+      const lblChatId = document.getElementById('lblChatId');
+
+      if (chatId) {
+        badge.className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold flex items-center gap-1.5";
+        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Conectado';
+        unlinkedBox.classList.add('hidden');
+        linkedBox.classList.remove('hidden');
+        lblChatId.innerText = chatId;
+      } else {
+        badge.className = "px-3 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-xs font-bold flex items-center gap-1.5";
+        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500"></span> Desconectado';
+        unlinkedBox.classList.remove('hidden');
+        linkedBox.classList.add('hidden');
       }
     }
 
@@ -244,47 +283,20 @@
 
       await fetch('/api/tenant/config', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ minThreshold, holdedApiKey, holdedFunnelId, holdedStageId, holdedWonStageId })
       });
 
-      alert('Configuración de Holded guardada correctamente.');
-    }
-
-    async function saveTelegramConfig() {
-      const telegramBotToken = document.getElementById('cfgTelegramToken').value.trim();
-      const telegramChatId = document.getElementById('cfgTelegramChatId').value.trim();
-
-      await fetch('/api/tenant/config', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ telegramBotToken, telegramChatId })
-      });
-
-      alert('Configuración de Telegram guardada correctamente.');
+      alert('Configuración guardada correctamente.');
     }
 
     async function testTelegramAlert() {
-      const botToken = document.getElementById('cfgTelegramToken').value.trim();
-      const chatId = document.getElementById('cfgTelegramChatId').value.trim();
-
-      if (!botToken || !chatId) {
-        return alert('Por favor, introduce el Bot Token y el Chat ID primero.');
-      }
+      if (!currentChatId) return alert('No hay ningún chat vinculado.');
 
       const res = await fetch('/api/tenant/test-telegram', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ botToken, chatId })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ chatId: currentChatId })
       });
 
       const data = await res.json();
@@ -292,6 +304,20 @@
         alert('✅ ' + data.message);
       } else {
         alert('❌ Error: ' + data.error);
+      }
+    }
+
+    async function disconnectTelegram() {
+      if (!confirm('¿Seguro que deseas desvincular este chat de Telegram?')) return;
+
+      const res = await fetch('/api/tenant/disconnect-telegram', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        currentChatId = null;
+        renderTelegramState(null);
       }
     }
 

@@ -60,12 +60,32 @@ export async function sendTelegramAlert(
     });
 
     const result = await res.json();
-    if (!result.ok) {
-      console.error('Respuesta de error de Telegram:', result);
-    }
     return result.ok === true;
   } catch (error) {
     console.error('Error enviando notificación a Telegram:', error);
+    return false;
+  }
+}
+
+export async function sendTelegramMessage(
+  botToken: string,
+  chatId: string | number,
+  text: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML'
+      })
+    });
+    const result = await res.json();
+    return result.ok === true;
+  } catch (error) {
+    console.error('Error enviando mensaje plano a Telegram:', error);
     return false;
   }
 }
