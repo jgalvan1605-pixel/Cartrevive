@@ -33,7 +33,7 @@ app.decorate('authenticate', async (request: any, reply: any) => {
   }
 });
 
-// Health check
+// Health check para verificar despliegues
 app.get('/api/health', async () => ({ status: 'ok', version: '2.0.0-telegram-autolink' }));
 
 // Auth: Register
@@ -242,7 +242,7 @@ app.get('/api/tenant/logs', { preHandler: [(app as any).authenticate] }, async (
   }));
 });
 
-// WEBHOOK SHOPIFY: ABANDONOS
+// WEBHOOK SHOPIFY: ABANDONOS DE CARRITO
 app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   const payload = request.body as ShopifyCheckoutEvent;

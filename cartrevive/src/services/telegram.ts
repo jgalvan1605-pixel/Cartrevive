@@ -82,10 +82,27 @@ export async function sendTelegramMessage(
         parse_mode: 'HTML'
       })
     });
+
     const result = await res.json();
-    return result.ok === true;
+
+    // Si Telegram rechaza el formato HTML por caracteres especiales, reenvía en texto plano
+    if (!result.ok) {
+      const plainText = text.replace(/<[^>]*>?/gm, '');
+      const retryRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: plainText
+        })
+      });
+      const retryResult = await retryRes.json();
+      return retryResult.ok === true;
+    }
+
+    return true;
   } catch (error) {
-    console.error('Error enviando mensaje a Telegram:', error);
+    console.error('Error enviando mensaje plano a Telegram:', error);
     return false;
   }
 }

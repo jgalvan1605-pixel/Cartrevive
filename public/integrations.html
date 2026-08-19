@@ -42,7 +42,7 @@
     </div>
   </header>
 
-  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVIL -->
+  <!-- NAVEGACIÓN INFERIOR MÓVIL -->
   <div class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 z-40 px-6 py-2 flex justify-between items-center text-xs">
     <a href="/dashboard.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white">
       <i class="fa-solid fa-chart-line text-base"></i>
@@ -60,7 +60,7 @@
 
   <main class="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10 space-y-8 md:space-y-12">
 
-    <!-- 1. BLOQUE TELEGRAM: VINCULACIÓN EN 1 CLIC (SPEED-TO-LEAD) -->
+    <!-- 1. BLOQUE TELEGRAM: VINCULACIÓN EN 1 CLIC -->
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
       <div class="flex items-center justify-between border-b border-slate-800 pb-4">
         <div class="flex items-center gap-3">
@@ -158,7 +158,7 @@
           <i class="fa-solid fa-circle-info text-indigo-400"></i> Pasos en Shopify Admin:
         </h4>
         <ol class="list-decimal list-inside space-y-1 text-slate-400 text-[11px]">
-          <li>Ve a <strong>Configuración</strong> $\rightarrow$ <strong>Notificaciones</strong> $\rightarrow$ <strong>Webhooks</strong>.</li>
+          <li>Ve a <strong>Configuración</strong> &rarr; <strong>Notificaciones</strong> &rarr; <strong>Webhooks</strong>.</li>
           <li>Crea un webhook con evento <strong>"Creación de pantalla de pago"</strong> y pega la URL (A).</li>
           <li>Crea un segundo webhook con evento <strong>"Creación de pedido"</strong> y pega la URL (B).</li>
         </ol>
@@ -219,8 +219,8 @@
 
     let currentUserId = null;
     let currentChatId = null;
+    let pollInterval = null;
 
-    // Nombre del bot en Telegram (tu bot)
     const BOT_USERNAME = "CartreviveBot";
 
     async function init() {
@@ -249,6 +249,11 @@
         document.getElementById('qrTelegram').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tgLink)}`;
 
         renderTelegramState(user.telegramChatId);
+
+        // Sondeo automático cada 2 segundos si aún no está vinculado
+        if (!user.telegramChatId) {
+          startPollingTelegram();
+        }
       } catch (e) {
         logout();
       }
@@ -272,6 +277,26 @@
         unlinkedBox.classList.remove('hidden');
         linkedBox.classList.add('hidden');
       }
+    }
+
+    function startPollingTelegram() {
+      if (pollInterval) clearInterval(pollInterval);
+
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (res.ok) {
+            const user = await res.json();
+            if (user.telegramChatId) {
+              currentChatId = user.telegramChatId;
+              renderTelegramState(user.telegramChatId);
+              clearInterval(pollInterval);
+            }
+          }
+        } catch (err) {
+          console.error('Error en auto-refresco:', err);
+        }
+      }, 2000);
     }
 
     async function saveHoldedConfig() {
@@ -318,6 +343,7 @@
       if (res.ok) {
         currentChatId = null;
         renderTelegramState(null);
+        startPollingTelegram();
       }
     }
 
@@ -328,6 +354,7 @@
     }
 
     function logout() {
+      if (pollInterval) clearInterval(pollInterval);
       localStorage.removeItem('cartrevive_token');
       window.location.href = '/';
     }
