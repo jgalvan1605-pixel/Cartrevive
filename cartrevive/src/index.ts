@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import { ShopifyCheckoutEvent } from './types/shopify';
 import { HoldedService } from './services/holded';
+import { sendTelegramAlert } from './services/telegram';
 import { prisma } from './db';
 
 dotenv.config();
@@ -75,6 +76,27 @@ app.post('/api/tenant/config', { preHandler: [(app as any).authenticate] }, asyn
     data: request.body
   });
   return reply.send({ status: 'updated', tenant: updated });
+});
+
+// Test de Alertas Telegram
+app.post('/api/tenant/test-telegram', { preHandler: [(app as any).authenticate] }, async (request: any, reply) => {
+  const { botToken, chatId } = request.body;
+  if (!botToken || !chatId) return reply.status(400).send({ error: 'Faltan credenciales de Telegram (Token o Chat ID)' });
+
+  const ok = await sendTelegramAlert(botToken, chatId, {
+    cartId: 'DEMO-999',
+    customerName: 'Cliente de Prueba VIP',
+    customerPhone: '+34600112233',
+    customerEmail: 'prueba@tienda.com',
+    cartAmount: 1450.00,
+    currency: 'EUR',
+    itemsSummary: '1x Máquina Pro Series (Prueba de Alerta Flash)',
+    assignedAgentName: 'Prueba de Sistema',
+    recoveryUrl: 'https://cartrevive.onrender.com'
+  });
+
+  if (!ok) return reply.status(400).send({ error: 'No se pudo enviar el mensaje a Telegram. Verifica que el bot esté iniciado (/start) y que el Token y Chat ID sean correctos.' });
+  return reply.send({ status: 'success', message: '¡Notificación de prueba enviada a Telegram con éxito!' });
 });
 
 // Reset de carritos para pruebas
@@ -157,7 +179,7 @@ app.get('/api/tenant/logs', { preHandler: [(app as any).authenticate] }, async (
   }));
 });
 
-// WEBHOOK SHOPIFY: MOTOR ROUND-ROBIN CON PERSISTENCIA TEMPORAL
+// WEBHOOK SHOPIFY: MOTOR DE ASIGNACIÓN EQUITATIVA (ROUND-ROBIN) + TELEGRAM ALERTS
 app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   const payload = request.body as ShopifyCheckoutEvent;
@@ -184,7 +206,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     ?.map(item => `${item.quantity}x ${item.title} (${item.price} ${payload.currency})`)
     .join(', ') || 'Sin artículos';
 
-  // 1. Filtro Umbral Económico
+  // 1. Filtro Umbral Económico Mínimo
   if (cartAmount < tenant.minThreshold) {
     await prisma.cartLog.upsert({
       where: { tenantId_shopifyCartId: { tenantId: tenant.id, shopifyCartId: BigInt(payload.id) } },
@@ -205,7 +227,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     return reply.status(200).send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  // 2. FILTRAR AGENTES APTOS PARA ESTE MONTO
+  // 2. Filtrar agentes aptos para este rango
   const eligibleAgents = tenant.agents.filter(a => {
     const minOk = cartAmount >= a.minAmount;
     const maxOk = a.maxAmount === null || a.maxAmount === undefined || cartAmount <= a.maxAmount;
@@ -215,7 +237,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   let selectedAgent = null;
 
   if (eligibleAgents.length > 0) {
-    // 3. ROUND-ROBIN REAL: Ordenar por el que lleve más tiempo sin recibir lead (lastAssignedAt nulo o más antiguo)
+    // Round-Robin por lastAssignedAt
     eligibleAgents.sort((a, b) => {
       if (!a.lastAssignedAt && !b.lastAssignedAt) return a.createdAt.getTime() - b.createdAt.getTime();
       if (!a.lastAssignedAt) return -1;
@@ -224,7 +246,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     });
     selectedAgent = eligibleAgents[0];
   } else if (tenant.agents.length > 0) {
-    // Fallback general si ningún agente tiene el rango específico
+    // Fallback circular general
     const allAgents = [...tenant.agents].sort((a, b) => {
       if (!a.lastAssignedAt && !b.lastAssignedAt) return a.createdAt.getTime() - b.createdAt.getTime();
       if (!a.lastAssignedAt) return -1;
@@ -237,7 +259,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   const assignedAgentId = selectedAgent ? selectedAgent.id : null;
   const assignedAgentName = selectedAgent ? selectedAgent.name : null;
 
-  // 4. ACTUALIZAR TIMESTAMP DEL AGENTE SELECCIONADO
+  // Actualizar timestamp de asignación
   if (selectedAgent) {
     await prisma.salesAgent.update({
       where: { id: selectedAgent.id },
@@ -280,6 +302,21 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
         itemsSummary
       }
     });
+
+    // 3. Disparar Alerta Instantánea a Telegram (Speed-to-Lead)
+    if (tenant.telegramBotToken && tenant.telegramChatId) {
+      sendTelegramAlert(tenant.telegramBotToken, tenant.telegramChatId, {
+        cartId: payload.id,
+        customerName,
+        customerPhone,
+        customerEmail,
+        cartAmount,
+        currency: payload.currency,
+        itemsSummary,
+        assignedAgentName,
+        recoveryUrl: payload.abandoned_checkout_url
+      }).catch(err => console.error('Error no bloqueante de Telegram:', err));
+    }
 
     return reply.status(200).send({
       status: 'success',

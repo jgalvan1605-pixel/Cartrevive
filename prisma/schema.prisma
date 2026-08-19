@@ -17,6 +17,8 @@ model Tenant {
   holdedFunnelId      String?
   holdedStageId       String?
   holdedWonStageId    String?
+  telegramBotToken    String?      // Token del Bot de Telegram
+  telegramChatId      String?      // ID del Chat/Grupo de Alertas
   minThreshold        Float        @default(150.00)
   whatsappTemplate    String?      @default("Hola {nombre}, te contacto de la tienda porque vi tu pedido pendiente por {monto} {moneda} ({articulos}). ¿Te ha surgido alguna duda durante el pago? Te facilito tu enlace directo: {link}")
   plan                String       @default("PRO")
@@ -35,11 +37,12 @@ model SalesAgent {
   name                String
   email               String?
   phone               String?
+  telegramChatId      String?      // ID personal de Telegram del comercial
   holdedUserId        String?
   minAmount           Float        @default(0)
   maxAmount           Float?
   isActive            Boolean      @default(true)
-  lastAssignedAt      DateTime?    // Timestamp para Round-Robin puro
+  lastAssignedAt      DateTime?
   createdAt           DateTime     @default(now())
 
   assignedCarts       CartLog[]
