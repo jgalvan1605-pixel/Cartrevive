@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import { ShopifyCheckoutEvent } from './types/shopify';
 import { HoldedService } from './services/holded';
-import { sendTelegramAlert } from './services/telegram';
+import { sendTelegramAlert, sendTelegramMessage } from './services/telegram';
 import { prisma } from './db';
 
 dotenv.config();
@@ -32,6 +32,9 @@ app.decorate('authenticate', async (request: any, reply: any) => {
     reply.status(401).send({ error: 'Sesión no válida o expirada' });
   }
 });
+
+// Health check
+app.get('/api/health', async () => ({ status: 'ok', version: '2.0.0-telegram-autolink' }));
 
 // Auth: Register
 app.post('/api/auth/register', async (request, reply) => {
@@ -78,10 +81,21 @@ app.post('/api/tenant/config', { preHandler: [(app as any).authenticate] }, asyn
   return reply.send({ status: 'updated', tenant: updated });
 });
 
-// Test de Alertas Telegram
+// Desvincular Telegram
+app.post('/api/tenant/disconnect-telegram', { preHandler: [(app as any).authenticate] }, async (request: any, reply) => {
+  const updated = await prisma.tenant.update({
+    where: { id: request.user.id },
+    data: { telegramChatId: null }
+  });
+  return reply.send({ status: 'disconnected', tenant: updated });
+});
+
+// Test Alerta Telegram
 app.post('/api/tenant/test-telegram', { preHandler: [(app as any).authenticate] }, async (request: any, reply) => {
-  const { botToken, chatId } = request.body;
-  if (!botToken || !chatId) return reply.status(400).send({ error: 'Faltan credenciales de Telegram (Token o Chat ID)' });
+  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
+  const chatId = request.body.chatId;
+
+  if (!chatId) return reply.status(400).send({ error: 'Falta Chat ID' });
 
   const ok = await sendTelegramAlert(botToken, chatId, {
     cartId: 'DEMO-999',
@@ -90,16 +104,65 @@ app.post('/api/tenant/test-telegram', { preHandler: [(app as any).authenticate] 
     customerEmail: 'prueba@tienda.com',
     cartAmount: 1450.00,
     currency: 'EUR',
-    itemsSummary: '1x Máquina Pro Series (Prueba de Alerta Flash)',
+    itemsSummary: '1x Máquina Pro Series (Prueba Flash)',
     assignedAgentName: 'Prueba de Sistema',
     recoveryUrl: 'https://cartrevive.onrender.com'
   });
 
-  if (!ok) return reply.status(400).send({ error: 'No se pudo enviar el mensaje a Telegram. Verifica que el bot esté iniciado (/start) y que el Token y Chat ID sean correctos.' });
+  if (!ok) return reply.status(400).send({ error: 'No se pudo enviar el mensaje a Telegram.' });
   return reply.send({ status: 'success', message: '¡Notificación de prueba enviada a Telegram con éxito!' });
 });
 
-// Reset de carritos para pruebas
+// WEBHOOK OFICIAL DE TELEGRAM: AUTO-VINCULACIÓN POR DEEP-LINK (/start <tenantId>)
+app.post('/api/telegram/webhook', async (request: any, reply) => {
+  const update = request.body;
+  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
+
+  if (update && update.message && update.message.text) {
+    const text: string = update.message.text.trim();
+    const chatId: number = update.message.chat.id;
+    const senderName = update.message.from?.first_name || 'Comercial';
+
+    if (text.startsWith('/start')) {
+      const parts = text.split(' ');
+      const startParam = parts[1]; // tenantId
+
+      if (startParam) {
+        try {
+          const tenant = await prisma.tenant.findUnique({ where: { id: startParam } });
+          if (tenant) {
+            await prisma.tenant.update({
+              where: { id: tenant.id },
+              data: {
+                telegramChatId: String(chatId),
+                telegramBotToken: botToken
+              }
+            });
+
+            await sendTelegramMessage(
+              botToken,
+              chatId,
+              `✅ <b>¡Conexión completada con éxito!</b>\n\nHola ${senderName}, este chat ha quedado vinculado a la cuenta de <b>${tenant.name}</b>.\n\nA partir de este instante recibirás aquí las alertas de carritos abandonados de alto valor con botones de llamada y WhatsApp directo.`
+            );
+            return reply.send({ status: 'ok', linkedTenant: tenant.id });
+          }
+        } catch (err) {
+          console.error('Error vinculando Telegram:', err);
+        }
+      }
+
+      await sendTelegramMessage(
+        botToken,
+        chatId,
+        `👋 <b>Bienvenido al Bot de CartRevive</b>\n\nPara vincular tu cuenta, abre tu panel en <a href="https://cartrevive.onrender.com/integrations.html">Integraciones</a> y pulsa en <b>Vincular mi Telegram en 1 Clic</b>.`
+      );
+    }
+  }
+
+  return reply.send({ status: 'ok' });
+});
+
+// Reset carritos
 app.post('/api/webhooks/shopify/:tenantId/reset', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   await prisma.cartLog.deleteMany({ where: { tenantId } });
@@ -179,7 +242,7 @@ app.get('/api/tenant/logs', { preHandler: [(app as any).authenticate] }, async (
   }));
 });
 
-// WEBHOOK SHOPIFY: MOTOR DE ASIGNACIÓN EQUITATIVA (ROUND-ROBIN) + TELEGRAM ALERTS
+// WEBHOOK SHOPIFY: ABANDONOS
 app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   const { tenantId } = request.params as { tenantId: string };
   const payload = request.body as ShopifyCheckoutEvent;
@@ -187,11 +250,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
-    include: {
-      agents: {
-        where: { isActive: true }
-      }
-    }
+    include: { agents: { where: { isActive: true } } }
   });
 
   if (!tenant || !tenant.isActive) return reply.status(404).send({ error: 'Tenant inactivo' });
@@ -206,7 +265,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     ?.map(item => `${item.quantity}x ${item.title} (${item.price} ${payload.currency})`)
     .join(', ') || 'Sin artículos';
 
-  // 1. Filtro Umbral Económico Mínimo
+  // 1. Umbral Mínimo
   if (cartAmount < tenant.minThreshold) {
     await prisma.cartLog.upsert({
       where: { tenantId_shopifyCartId: { tenantId: tenant.id, shopifyCartId: BigInt(payload.id) } },
@@ -227,7 +286,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     return reply.status(200).send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  // 2. Filtrar agentes aptos para este rango
+  // 2. Round Robin
   const eligibleAgents = tenant.agents.filter(a => {
     const minOk = cartAmount >= a.minAmount;
     const maxOk = a.maxAmount === null || a.maxAmount === undefined || cartAmount <= a.maxAmount;
@@ -237,7 +296,6 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   let selectedAgent = null;
 
   if (eligibleAgents.length > 0) {
-    // Round-Robin por lastAssignedAt
     eligibleAgents.sort((a, b) => {
       if (!a.lastAssignedAt && !b.lastAssignedAt) return a.createdAt.getTime() - b.createdAt.getTime();
       if (!a.lastAssignedAt) return -1;
@@ -246,7 +304,6 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     });
     selectedAgent = eligibleAgents[0];
   } else if (tenant.agents.length > 0) {
-    // Fallback circular general
     const allAgents = [...tenant.agents].sort((a, b) => {
       if (!a.lastAssignedAt && !b.lastAssignedAt) return a.createdAt.getTime() - b.createdAt.getTime();
       if (!a.lastAssignedAt) return -1;
@@ -259,7 +316,6 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
   const assignedAgentId = selectedAgent ? selectedAgent.id : null;
   const assignedAgentName = selectedAgent ? selectedAgent.name : null;
 
-  // Actualizar timestamp de asignación
   if (selectedAgent) {
     await prisma.salesAgent.update({
       where: { id: selectedAgent.id },
@@ -303,9 +359,10 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
       }
     });
 
-    // 3. Disparar Alerta Instantánea a Telegram (Speed-to-Lead)
-    if (tenant.telegramBotToken && tenant.telegramChatId) {
-      sendTelegramAlert(tenant.telegramBotToken, tenant.telegramChatId, {
+    // 3. Telegram Push
+    const activeToken = tenant.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
+    if (activeToken && tenant.telegramChatId) {
+      sendTelegramAlert(activeToken, tenant.telegramChatId, {
         cartId: payload.id,
         customerName,
         customerPhone,
@@ -315,7 +372,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
         itemsSummary,
         assignedAgentName,
         recoveryUrl: payload.abandoned_checkout_url
-      }).catch(err => console.error('Error no bloqueante de Telegram:', err));
+      }).catch(err => console.error('Error Telegram:', err));
     }
 
     return reply.status(200).send({

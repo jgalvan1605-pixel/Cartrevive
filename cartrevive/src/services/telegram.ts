@@ -85,7 +85,7 @@ export async function sendTelegramMessage(
     const result = await res.json();
     return result.ok === true;
   } catch (error) {
-    console.error('Error enviando mensaje plano a Telegram:', error);
+    console.error('Error enviando mensaje a Telegram:', error);
     return false;
   }
 }
