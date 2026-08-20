@@ -4,143 +4,268 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Suscripción y Facturación - CartRevive</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --bg: #090d16;
-      --card-bg: #111726;
-      --card-border: #1f293d;
-      --gold: #f59e0b;
-      --gold-hover: #d97706;
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
-      --success: #10b981;
-      --danger: #ef4444;
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.05); }
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-    
-    .navbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1.25rem 2rem; border-bottom: 1px solid var(--card-border);
-      background: rgba(17, 23, 38, 0.7); backdrop-filter: blur(10px);
+    .animate-glow {
+      animation: pulse-slow 6s ease-in-out infinite;
     }
-    .logo { font-size: 1.4rem; font-weight: 800; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
-    .logo span { color: var(--gold); }
-    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-left: 1.5rem; transition: 0.2s; }
-    .nav-links a:hover { color: #fff; }
-
-    .container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; width: 100%; }
-    
-    .status-banner {
-      padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: none;
-      font-size: 0.95rem; font-weight: 500; text-align: center;
-    }
-    .banner-expired { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; }
-    .banner-trialing { background: rgba(245, 158, 11, 0.15); border: 1px solid var(--gold); color: #fcd34d; }
-    .banner-active { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); color: #6ee7b7; }
-
-    .pricing-card {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 20px; padding: 2.5rem; text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); position: relative;
-    }
-    .badge {
-      display: inline-block; background: var(--gold); color: #000;
-      font-size: 0.75rem; font-weight: 800; padding: 0.35rem 0.85rem;
-      border-radius: 50px; text-transform: uppercase; margin-bottom: 1rem;
-    }
-    .plan-title { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .plan-price { font-size: 3rem; font-weight: 800; color: #fff; margin: 1.5rem 0 0.5rem; }
-    .plan-price span { font-size: 1.1rem; color: var(--text-muted); font-weight: 400; }
-    
-    .features-list { list-style: none; margin: 2rem 0; text-align: left; max-width: 450px; margin-left: auto; margin-right: auto; }
-    .features-list li { padding: 0.65rem 0; color: #d1d5db; display: flex; align-items: center; gap: 0.75rem; font-size: 0.95rem; }
-    .features-list li::before { content: "✓"; color: var(--gold); font-weight: bold; }
-
-    .btn-pay {
-      background: var(--gold); color: #000; font-size: 1.05rem; font-weight: 700;
-      padding: 1rem 2.5rem; border: none; border-radius: 12px; cursor: pointer;
-      width: 100%; max-width: 450px; transition: all 0.2s;
-    }
-    .btn-pay:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.25); }
-    .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white flex flex-col justify-between relative overflow-x-hidden">
 
-  <nav class="navbar">
-    <a href="/dashboard.html" class="logo">⚡ Cart<span>Revive</span></a>
-    <div class="nav-links">
-      <a href="/dashboard.html">Dashboard</a>
-      <a href="/sales.html">Ventas</a>
-      <a href="/integrations.html">Integraciones</a>
+  <!-- GLOW DECORATIVO DE FONDO -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] h-[450px] bg-gradient-to-tr from-indigo-600/20 via-sky-500/20 to-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10 animate-glow"></div>
+
+  <!-- NAVBAR UNIFICADO -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur sticky top-0 z-40 px-4 md:px-8 py-3.5 flex justify-between items-center max-w-7xl w-full mx-auto">
+    <div class="flex items-center space-x-6">
+      <a href="/dashboard.html" class="flex items-center space-x-3 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition">
+          <i class="fa-solid fa-rotate-right"></i>
+        </div>
+        <span class="text-base md:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">CartRevive</span>
+      </a>
+
+      <!-- Enlaces de navegación interna -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <a href="/dashboard.html" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition">Dashboard</a>
+        <a href="/sales.html" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition">Ventas & Leads</a>
+        <a href="/integrations.html" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition">Integraciones</a>
+        <a href="/billing.html" class="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 border border-slate-800 rounded-xl transition">Suscripción</a>
+      </nav>
     </div>
-  </nav>
 
-  <div class="container">
-    <div id="statusBanner" class="status-banner"></div>
-
-    <div class="pricing-card">
-      <span class="badge">Plan Speed-to-Lead Ilimitado</span>
-      <h1 class="plan-title">CartRevive Pro</h1>
-      <p style="color: var(--text-muted);">Recupera carritos de alto valor contactando a tus leads en menos de 5 minutos.</p>
-
-      <div class="plan-price">49€ <span>/ mes</span></div>
-
-      <ul class="features-list">
-        <li>Alertas instantáneas en Telegram con botones WhatsApp</li>
-        <li>Round-Robin inteligente y asignación de comerciales</li>
-        <li>Sincronización automática de oportunidades en Holded CRM</li>
-        <li>Filtro por importe mínimo de carrito sin límite de volumen</li>
-        <li>Soporte prioritario y actualizaciones continuas</li>
-      </ul>
-
-      <button id="btnSubscribe" onclick="handleCheckout()" class="btn-pay">
-        🔒 Activar Suscripción con Stripe
+    <div class="flex items-center space-x-3">
+      <span id="shopNameDisplay" class="text-xs text-slate-400 hidden sm:inline-block">Cargando...</span>
+      <button onclick="logout()" class="px-3 py-1.5 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl border border-red-500/20 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span class="hidden sm:inline">Salir</span>
       </button>
     </div>
-  </div>
+  </header>
 
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-4xl w-full mx-auto px-4 md:px-6 py-8 md:py-12 flex-1 space-y-8">
+    
+    <!-- CABECERA DE SECCIÓN -->
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-700/80 text-xs font-semibold text-indigo-400 shadow-inner">
+        <i class="fa-solid fa-credit-card"></i>
+        <span>Gestión de Plan y Facturación</span>
+      </div>
+      <h1 class="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
+        Plan <span class="bg-gradient-to-r from-indigo-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">CartRevive Pro</span>
+      </h1>
+      <p class="text-xs md:text-sm text-slate-400 max-w-lg mx-auto">
+        Acceso ilimitado a la recuperación de carritos de alto valor mediante Speed-to-Lead con Telegram y Round-Robin.
+      </p>
+    </div>
+
+    <!-- BANNER DINÁMICO DE ESTADO DE SUSCRIPCIÓN -->
+    <div id="statusBanner" class="p-4 rounded-2xl border backdrop-blur transition-all flex items-center justify-between gap-4 hidden">
+      <div class="flex items-center gap-3">
+        <div id="statusIcon" class="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"></div>
+        <div>
+          <h3 id="statusTitle" class="text-xs md:text-sm font-bold text-white">Estado de la cuenta</h3>
+          <p id="statusDesc" class="text-[11px] md:text-xs text-slate-400">Verificando suscripción...</p>
+        </div>
+      </div>
+      <div id="statusBadge" class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border"></div>
+    </div>
+
+    <!-- TARJETA DE PRECIO Y SUSCRIPCIÓN STRIPE -->
+    <div class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 md:p-10 backdrop-blur shadow-2xl relative overflow-hidden group hover:border-slate-700 transition">
+      
+      <!-- Glow interior decorativo -->
+      <div class="absolute -right-20 -top-20 w-60 h-60 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        
+        <!-- Info del Plan -->
+        <div class="md:col-span-7 space-y-5">
+          <div class="space-y-1">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold uppercase tracking-wider">
+              🚀 Acceso Completo
+            </div>
+            <h2 class="text-xl md:text-2xl font-extrabold text-white">Suscripción Mensual Pro</h2>
+            <p class="text-xs text-slate-400">Sin permanencia. Cancela o reactiva tu suscripción en cualquier momento con un clic.</p>
+          </div>
+
+          <!-- Lista de Características Incluidas -->
+          <div class="space-y-2.5 pt-2">
+            <div class="flex items-center gap-2.5 text-xs text-slate-300">
+              <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+              <span>Alertas instantáneas a Telegram con botón de WhatsApp directo</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-xs text-slate-300">
+              <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+              <span>Motor de asignación de comerciales Round-Robin por tramos</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-xs text-slate-300">
+              <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+              <span>Integración y auto-cierre con Holded CRM y Shopify</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-xs text-slate-300">
+              <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+              <span>Carritos y alertas ilimitadas sin comisión sobre ventas recuperadas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna de Precio y Botón Stripe -->
+        <div class="md:col-span-5 bg-slate-950/80 border border-slate-800/80 rounded-2xl p-6 text-center space-y-4">
+          <div>
+            <span class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">49 €</span>
+            <span class="text-xs text-slate-400 font-medium"> / mes</span>
+          </div>
+
+          <div class="text-[11px] text-slate-400 border-t border-b border-slate-800 py-2">
+            Pagos procesados mediante <b>Stripe Checkout</b> con cifrado bancario seguro.
+          </div>
+
+          <button id="btnSubscribe" onclick="handleCheckout()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs md:text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-lock text-indigo-200" id="btnIcon"></i>
+            <span id="btnText">Activar Suscripción con Stripe</span>
+          </button>
+
+          <div class="flex items-center justify-center gap-3 text-[10px] text-slate-500 pt-1">
+            <span><i class="fa-brands fa-cc-stripe text-slate-400"></i> Stripe Seguro</span>
+            <span>&bull;</span>
+            <span><i class="fa-solid fa-shield-halved text-slate-400"></i> SSL 256-bit</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PREGUNTAS FRECUENTES / CONFIANZA -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-left">
+      <div class="p-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
+        <div class="text-indigo-400 text-base mb-1.5"><i class="fa-solid fa-calendar-check"></i></div>
+        <h4 class="text-xs font-bold text-white mb-1">¿Cuándo se me cobra?</h4>
+        <p class="text-[11px] text-slate-400 leading-relaxed">Si estás en tus 15 días de prueba gratis, no se te cobrará hasta que decidas activar tu suscripción.</p>
+      </div>
+
+      <div class="p-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
+        <div class="text-sky-400 text-base mb-1.5"><i class="fa-solid fa-ban"></i></div>
+        <h4 class="text-xs font-bold text-white mb-1">¿Puedo cancelar en cualquier momento?</h4>
+        <p class="text-[11px] text-slate-400 leading-relaxed">Sí, puedes cancelar la renovación cuando desees directamente desde tu panel o escribiéndonos.</p>
+      </div>
+
+      <div class="p-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
+        <div class="text-emerald-400 text-base mb-1.5"><i class="fa-solid fa-receipt"></i></div>
+        <h4 class="text-xs font-bold text-white mb-1">¿Recibo factura con IVA?</h4>
+        <p class="text-[11px] text-slate-400 leading-relaxed">Stripe genera y envía automáticamente la factura desglosada a tu correo corporativo cada mes.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-900 py-4 text-center text-xs text-slate-500">
+    © 2026 CartRevive. Plataforma de Venta Asistida para Shopify & Holded CRM.
+  </footer>
+
+  <!-- SCRIPT DE LÓGICA Y SINCRONIZACIÓN -->
   <script>
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = '/login.html';
+    const token = localStorage.getItem('token') || localStorage.getItem('cartrevive_token');
+    if (!token) {
+      window.location.href = '/login.html';
+    }
 
-    async function loadSubscription() {
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('cartrevive_token');
+      window.location.href = '/login.html';
+    }
+
+    async function loadBillingStatus() {
       try {
         const res = await fetch('/api/auth/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const user = await res.json();
-        const info = user.subscriptionInfo;
-        const banner = document.getElementById('statusBanner');
-        const btn = document.getElementById('btnSubscribe');
 
-        banner.style.display = 'block';
+        if (res.status === 401) {
+          logout();
+          return;
+        }
+
+        const user = await res.json();
+        if (!user) return;
+
+        // Mostrar nombre de la tienda
+        document.getElementById('shopNameDisplay').innerText = user.name || user.email;
+
+        const info = user.subscriptionInfo || { status: 'TRIALING', daysLeft: 15, isAllowed: true };
+        const banner = document.getElementById('statusBanner');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusDesc = document.getElementById('statusDesc');
+        const statusBadge = document.getElementById('statusBadge');
+        const btnSubscribe = document.getElementById('btnSubscribe');
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+
+        banner.classList.remove('hidden');
 
         if (info.status === 'ACTIVE') {
-          banner.className = 'status-banner banner-active';
-          banner.innerHTML = '✅ <b>Suscripción Activa:</b> Tienes acceso completo a todas las funciones.';
-          btn.innerText = 'Tu plan está activo';
-          btn.disabled = true;
+          // Suscripción Activa
+          banner.className = 'p-4 rounded-2xl border bg-emerald-500/10 border-emerald-500/20 backdrop-blur transition-all flex items-center justify-between gap-4';
+          statusIcon.className = 'w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg flex-shrink-0';
+          statusIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+          statusTitle.innerText = 'Suscripción Activa';
+          statusDesc.innerText = 'Tu cuenta tiene acceso ilimitado a todas las alertas y funciones de CartRevive Pro.';
+          statusBadge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          statusBadge.innerText = 'Activo';
+
+          btnSubscribe.disabled = true;
+          btnSubscribe.className = 'w-full py-3 bg-slate-800 text-slate-400 font-bold text-xs md:text-sm rounded-xl cursor-not-allowed flex items-center justify-center gap-2';
+          btnText.innerText = 'Tu Plan Pro está Activo';
+          btnIcon.className = 'fa-solid fa-check text-emerald-400';
         } else if (info.status === 'TRIALING') {
-          banner.className = 'status-banner banner-trialing';
-          banner.innerHTML = `⏳ <b>Período de prueba en curso:</b> Te quedan <b>${info.daysLeft} días</b> de acceso gratuito.`;
-          btn.innerText = '🔒 Pasar a Plan Pro (49€/mes)';
+          // Periodo de Prueba
+          banner.className = 'p-4 rounded-2xl border bg-amber-500/10 border-amber-500/20 backdrop-blur transition-all flex items-center justify-between gap-4';
+          statusIcon.className = 'w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg flex-shrink-0';
+          statusIcon.innerHTML = '<i class="fa-solid fa-hourglass-half"></i>';
+          statusTitle.innerText = `Prueba Gratuita (${info.daysLeft} días restantes)`;
+          statusDesc.innerText = 'Estás disfrutando de tu prueba de 15 días. Activa tu plan para no interrumpir el servicio al finalizar.';
+          statusBadge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30';
+          statusBadge.innerText = `${info.daysLeft} Días Restantes`;
+
+          btnText.innerText = 'Activar Plan Pro (49 €/mes)';
         } else {
-          banner.className = 'status-banner banner-expired';
-          banner.innerHTML = '⚠️ <b>Tu prueba de 15 días ha finalizado:</b> Activa tu suscripción para continuar recibiendo alertas de carritos en tiempo real.';
-          btn.innerText = '🔒 Activar Suscripción para Desbloquear';
+          // Expirado (Paywall)
+          banner.className = 'p-4 rounded-2xl border bg-red-500/10 border-red-500/20 backdrop-blur transition-all flex items-center justify-between gap-4';
+          statusIcon.className = 'w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center text-lg flex-shrink-0';
+          statusIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+          statusTitle.innerText = 'Período de prueba finalizado';
+          statusDesc.innerText = 'Tus alertas de Telegram están pausadas. Activa tu suscripción para reanudar el servicio.';
+          statusBadge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30';
+          statusBadge.innerText = 'Bloqueado';
+
+          btnText.innerText = 'Desbloquear y Activar Plan Pro';
         }
+
       } catch (err) {
-        console.error('Error cargando estado:', err);
+        console.error('Error cargando información de suscripción:', err);
       }
     }
 
     async function handleCheckout() {
       const btn = document.getElementById('btnSubscribe');
+      const btnText = document.getElementById('btnText');
+      const btnIcon = document.getElementById('btnIcon');
+
       btn.disabled = true;
-      btn.innerText = 'Conectando con Stripe...';
+      const originalText = btnText.innerText;
+      btnText.innerText = 'Conectando con Stripe...';
+      btnIcon.className = 'fa-solid fa-spinner fa-spin text-white';
 
       try {
         const res = await fetch('/api/stripe/create-checkout-session', {
@@ -152,20 +277,27 @@
         });
 
         const data = await res.json();
-        if (data.url) {
+
+        if (res.ok && data.url) {
+          // Redirigir a Stripe Checkout oficial
           window.location.href = data.url;
         } else {
-          alert('Error: ' + (data.error || 'No se pudo iniciar el pago'));
+          alert('Error iniciando la pasarela de pago: ' + (data.error || 'Inténtalo de nuevo.'));
           btn.disabled = false;
-          btn.innerText = '🔒 Activar Suscripción con Stripe';
+          btnText.innerText = originalText;
+          btnIcon.className = 'fa-solid fa-lock text-indigo-200';
         }
-      } catch (e) {
-        alert('Error al conectar con el servidor.');
+      } catch (err) {
+        alert('Error de conexión con el servidor.');
         btn.disabled = false;
+        btnText.innerText = originalText;
+        btnIcon.className = 'fa-solid fa-lock text-indigo-200';
       }
     }
 
-    loadSubscription();
+    // Inicializar carga de datos
+    loadBillingStatus();
   </script>
+
 </body>
 </html>
