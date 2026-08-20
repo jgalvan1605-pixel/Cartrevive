@@ -31,7 +31,7 @@ model Tenant {
   stripeSubscriptionId String?
 
   createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  updatedAt            DateTime     @default(now()) @updatedAt
 
   agents               SalesAgent[]
   cartLogs             CartLog[]
@@ -73,7 +73,7 @@ model CartLog {
   itemsSummary   String?
   recoveredAt    DateTime?
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  updatedAt      DateTime  @default(now()) @updatedAt
 
   tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   agent          SalesAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
