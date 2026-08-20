@@ -3,106 +3,247 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso - CartRevive</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Acceso y Registro - CartRevive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --bg: #090d16;
-      --card-bg: #111726;
-      --card-border: #1f293d;
-      --gold: #f59e0b;
-      --gold-hover: #d97706;
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
-      --danger: #ef4444;
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.05); }
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-    
-    .auth-card {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 16px; width: 100%; max-width: 420px; padding: 2.5rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    .animate-glow {
+      animation: pulse-slow 6s ease-in-out infinite;
     }
-    .logo { font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 1.5rem; }
-    .logo span { color: var(--gold); }
-
-    .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); }
-    .tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; }
-    .tab.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
-
-    .form-group { margin-bottom: 1.25rem; }
-    label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.5rem; }
-    input {
-      width: 100%; padding: 0.8rem 1rem; background: #0c1222; border: 1px solid var(--card-border);
-      border-radius: 8px; color: #fff; font-size: 0.95rem; outline: none; transition: 0.2s;
-    }
-    input:focus { border-color: var(--gold); }
-
-    .btn-submit {
-      width: 100%; background: var(--gold); color: #000; font-weight: 700;
-      padding: 0.85rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;
-      margin-top: 0.5rem; transition: 0.2s;
-    }
-    .btn-submit:hover { background: var(--gold-hover); }
-
-    .alert { padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
-    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; }
   </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white flex flex-col justify-between relative overflow-x-hidden">
 
-  <div class="auth-card">
-    <div class="logo">⚡ Cart<span>Revive</span></div>
+  <!-- GLOW DECORATIVO DE FONDO (IDÉNTICO A LA LANDING) -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] h-[450px] bg-gradient-to-tr from-indigo-600/20 via-sky-500/20 to-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10 animate-glow"></div>
 
-    <div class="tabs">
-      <div id="tabLogin" class="tab active" onclick="switchTab('login')">Iniciar Sesión</div>
-      <div id="tabRegister" class="tab" onclick="switchTab('register')">Registro (15d Gratis)</div>
+  <!-- NAVBAR -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur sticky top-0 z-40 px-4 md:px-8 py-3.5 flex justify-between items-center max-w-7xl w-full mx-auto">
+    <a href="/index.html" class="flex items-center space-x-3 group">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition">
+        <i class="fa-solid fa-rotate-right"></i>
+      </div>
+      <span class="text-base md:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">CartRevive</span>
+    </a>
+
+    <a href="/index.html" class="px-3.5 py-1.5 text-xs md:text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl border border-transparent hover:border-slate-800 transition flex items-center gap-2">
+      <i class="fa-solid fa-arrow-left text-xs"></i>
+      <span>Volver a la web</span>
+    </a>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-5xl w-full mx-auto px-4 md:px-6 py-8 md:py-12 flex-1 flex items-center justify-center">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-center">
+      
+      <!-- COLUMNA IZQUIERDA: PITCH & BENEFICIOS 15 DÍAS -->
+      <div class="lg:col-span-6 space-y-6 hidden lg:block pr-4">
+        
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-700/80 text-xs font-semibold text-sky-400 shadow-inner">
+          <span class="flex h-2 w-2 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+          </span>
+          <span>Prueba Gratis de 15 Días sin tarjeta</span>
+        </div>
+
+        <h1 class="text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+          Vende a los clientes indecisos en <br>
+          <span class="bg-gradient-to-r from-indigo-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">menos de 5 minutos.</span>
+        </h1>
+
+        <p class="text-sm text-slate-400 leading-relaxed">
+          Conecta el webhook de Shopify en 2 minutos y empieza a notificar a tus comerciales por Telegram con botones de WhatsApp directo.
+        </p>
+
+        <!-- Lista de Características -->
+        <div class="space-y-3.5 pt-2">
+          <div class="flex items-center gap-3 text-xs md:text-sm text-slate-300">
+            <div class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center flex-shrink-0">
+              <i class="fa-brands fa-telegram text-sm"></i>
+            </div>
+            <span>Alertas instantáneas al móvil con botón de llamada y WhatsApp</span>
+          </div>
+
+          <div class="flex items-center gap-3 text-xs md:text-sm text-slate-300">
+            <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-users-gear text-sm"></i>
+            </div>
+            <span>Reparto comercial Round-Robin equitativo por tramos</span>
+          </div>
+
+          <div class="flex items-center gap-3 text-xs md:text-sm text-slate-300">
+            <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-handshake text-sm"></i>
+            </div>
+            <span>Auto-creación y cierre de oportunidades en Holded CRM</span>
+          </div>
+        </div>
+
+        <div class="pt-4 flex items-center gap-4 text-xs text-slate-500">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-emerald-500"></i> Cifrado SSL 256-bit</span>
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-bolt text-indigo-400"></i> Setup en 3 minutos</span>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA: TARJETA DE FORMULARIO -->
+      <div class="lg:col-span-6 w-full max-w-md mx-auto">
+        <div class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 md:p-8 backdrop-blur shadow-2xl relative overflow-hidden">
+          
+          <!-- Selector Segmentado (Login / Register) -->
+          <div class="grid grid-cols-2 bg-slate-950 p-1 rounded-2xl border border-slate-800/80 mb-6">
+            <button type="button" id="tabLogin" onclick="setMode('login')" class="py-2 text-xs md:text-sm font-bold rounded-xl transition text-white bg-indigo-600 shadow-md shadow-indigo-600/25">
+              Iniciar Sesión
+            </button>
+            <button type="button" id="tabRegister" onclick="setMode('register')" class="py-2 text-xs md:text-sm font-semibold rounded-xl transition text-slate-400 hover:text-white">
+              Registrarse (15d)
+            </button>
+          </div>
+
+          <!-- Alertas de Error / Estado -->
+          <div id="alertBox" class="hidden mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="alertMsg">Error al autenticar</span>
+          </div>
+
+          <!-- Formulario -->
+          <form id="authForm" onsubmit="handleSubmit(event)" class="space-y-4">
+            
+            <!-- Campo Nombre (Solo en Registro) -->
+            <div id="fieldShopName" class="space-y-1.5 hidden">
+              <label class="block text-xs font-semibold text-slate-300">Nombre de la Tienda / Empresa</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 text-xs">
+                  <i class="fa-solid fa-store"></i>
+                </div>
+                <input id="inputName" type="text" class="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" placeholder="Ej. Akon Fitness">
+              </div>
+            </div>
+
+            <!-- Campo Email -->
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-slate-300">Email Corporativo</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 text-xs">
+                  <i class="fa-solid fa-envelope"></i>
+                </div>
+                <input id="inputEmail" type="email" required class="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" placeholder="admin@tutienda.com">
+              </div>
+            </div>
+
+            <!-- Campo Contraseña -->
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-slate-300">Contraseña</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 text-xs">
+                  <i class="fa-solid fa-lock"></i>
+                </div>
+                <input id="inputPassword" type="password" required class="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" placeholder="••••••••">
+              </div>
+            </div>
+
+            <!-- Campo Umbral Mínimo (Solo en Registro) -->
+            <div id="fieldThreshold" class="space-y-1.5 hidden">
+              <label class="block text-xs font-semibold text-slate-300">Umbral mínimo de carrito a rescatar (€)</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 text-xs">
+                  <i class="fa-solid fa-euro-sign"></i>
+                </div>
+                <input id="inputThreshold" type="number" min="1" step="10" value="150" class="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" placeholder="150">
+              </div>
+              <p class="text-[11px] text-slate-500">Solo avisaremos a comerciales cuando el carrito supere esta cantidad.</p>
+            </div>
+
+            <!-- Botón Submit Principal -->
+            <button type="submit" id="btnSubmit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs md:text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 mt-2">
+              <i class="fa-solid fa-bolt text-indigo-200" id="btnIcon"></i>
+              <span id="btnText">Entrar al Panel</span>
+            </button>
+          </form>
+
+          <div class="mt-5 pt-4 border-t border-slate-800 text-center">
+            <p class="text-[11px] text-slate-400" id="footerText">
+              ¿No tienes cuenta? <button type="button" onclick="setMode('register')" class="text-indigo-400 hover:text-indigo-300 font-semibold underline">Prueba 15 días gratis</button>
+            </p>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
-    <div id="alertBox" class="alert alert-error"></div>
+  </main>
 
-    <form id="authForm" onsubmit="handleSubmit(event)">
-      <div class="form-group" id="groupName" style="display: none;">
-        <label>Nombre de la Empresa / Tienda</label>
-        <input type="text" id="name" placeholder="Ej: Mi Tienda Online">
-      </div>
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-900 py-4 text-center text-xs text-slate-500">
+    © 2026 CartRevive. Plataforma de Venta Asistida para Shopify & Holded CRM.
+  </footer>
 
-      <div class="form-group">
-        <label>Correo Electrónico</label>
-        <input type="email" id="email" required placeholder="admin@tienda.com">
-      </div>
-
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="password" required placeholder="••••••••">
-      </div>
-
-      <button type="submit" id="btnAction" class="btn-submit">Entrar al Panel</button>
-    </form>
-  </div>
-
+  <!-- LÓGICA DE AUTENTICACIÓN Y MODO DE FORMULARIO -->
   <script>
     let mode = 'login';
 
-    function switchTab(newMode) {
+    // Detección de parámetro en URL (?mode=register)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'register') {
+      setMode('register');
+    }
+
+    function setMode(newMode) {
       mode = newMode;
-      document.getElementById('tabLogin').className = mode === 'login' ? 'tab active' : 'tab';
-      document.getElementById('tabRegister').className = mode === 'register' ? 'tab active' : 'tab';
-      document.getElementById('groupName').style.display = mode === 'register' ? 'block' : 'none';
-      document.getElementById('btnAction').innerText = mode === 'login' ? 'Entrar al Panel' : 'Crear Cuenta (15 días gratis)';
-      document.getElementById('alertBox').style.display = 'none';
+      const tabLogin = document.getElementById('tabLogin');
+      const tabRegister = document.getElementById('tabRegister');
+      const fieldShopName = document.getElementById('fieldShopName');
+      const fieldThreshold = document.getElementById('fieldThreshold');
+      const btnText = document.getElementById('btnText');
+      const footerText = document.getElementById('footerText');
+      const alertBox = document.getElementById('alertBox');
+
+      alertBox.classList.add('hidden');
+
+      if (mode === 'login') {
+        tabLogin.className = 'py-2 text-xs md:text-sm font-bold rounded-xl transition text-white bg-indigo-600 shadow-md shadow-indigo-600/25';
+        tabRegister.className = 'py-2 text-xs md:text-sm font-semibold rounded-xl transition text-slate-400 hover:text-white';
+        fieldShopName.classList.add('hidden');
+        fieldThreshold.classList.add('hidden');
+        btnText.innerText = 'Entrar al Panel';
+        footerText.innerHTML = '¿No tienes cuenta? <button type="button" onclick="setMode(\'register\')" class="text-indigo-400 hover:text-indigo-300 font-semibold underline">Prueba 15 días gratis</button>';
+      } else {
+        tabRegister.className = 'py-2 text-xs md:text-sm font-bold rounded-xl transition text-white bg-indigo-600 shadow-md shadow-indigo-600/25';
+        tabLogin.className = 'py-2 text-xs md:text-sm font-semibold rounded-xl transition text-slate-400 hover:text-white';
+        fieldShopName.classList.remove('hidden');
+        fieldThreshold.classList.remove('hidden');
+        btnText.innerText = 'Crear Cuenta Gratis (15 Días)';
+        footerText.innerHTML = '¿Ya tienes cuenta? <button type="button" onclick="setMode(\'login\')" class="text-indigo-400 hover:text-indigo-300 font-semibold underline">Inicia Sesión</button>';
+      }
     }
 
     async function handleSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const name = document.getElementById('name').value.trim();
       const alertBox = document.getElementById('alertBox');
+      const alertMsg = document.getElementById('alertMsg');
+      const btnSubmit = document.getElementById('btnSubmit');
+      const btnText = document.getElementById('btnText');
+
+      const email = document.getElementById('inputEmail').value.trim();
+      const password = document.getElementById('inputPassword').value;
+      const name = document.getElementById('inputName').value.trim();
+      const minThreshold = document.getElementById('inputThreshold').value;
+
+      alertBox.classList.add('hidden');
+      btnSubmit.disabled = true;
+      const originalText = btnText.innerText;
+      btnText.innerText = 'Procesando...';
 
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const payload = mode === 'login' ? { email, password } : { email, password, name };
+      const payload = mode === 'login' 
+        ? { email, password } 
+        : { email, password, name: name || 'Mi Tienda Online', minThreshold: parseFloat(minThreshold) || 150 };
 
       try {
         const res = await fetch(endpoint, {
@@ -114,19 +255,33 @@
         const data = await res.json();
 
         if (!res.ok) {
-          alertBox.innerText = data.error || 'Error de autenticación';
-          alertBox.style.display = 'block';
+          alertMsg.innerText = data.error || 'Credenciales inválidas o datos incompletos.';
+          alertBox.classList.remove('hidden');
+          btnSubmit.disabled = false;
+          btnText.innerText = originalText;
           return;
         }
 
-        // Guardar token JWT y redirigir
-        localStorage.setItem('token', data.token);
-        window.location.href = '/dashboard.html';
+        // Guardar ambos identificadores de token para compatibilidad total
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('cartrevive_token', data.token);
+          window.location.href = '/dashboard.html';
+        } else {
+          alertMsg.innerText = 'Error inesperado del servidor.';
+          alertBox.classList.remove('hidden');
+          btnSubmit.disabled = false;
+          btnText.innerText = originalText;
+        }
+
       } catch (err) {
-        alertBox.innerText = 'Error al contactar con el servidor';
-        alertBox.style.display = 'block';
+        alertMsg.innerText = 'Error de conexión con el servidor.';
+        alertBox.classList.remove('hidden');
+        btnSubmit.disabled = false;
+        btnText.innerText = originalText;
       }
     }
   </script>
+
 </body>
 </html>
