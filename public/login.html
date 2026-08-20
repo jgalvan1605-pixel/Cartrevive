@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso - CartRevive</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111726;
+      --card-border: #1f293d;
+      --gold: #f59e0b;
+      --gold-hover: #d97706;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+    
+    .auth-card {
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 16px; width: 100%; max-width: 420px; padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .logo { font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 1.5rem; }
+    .logo span { color: var(--gold); }
+
+    .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); }
+    .tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; }
+    .tab.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+    .form-group { margin-bottom: 1.25rem; }
+    label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.5rem; }
+    input {
+      width: 100%; padding: 0.8rem 1rem; background: #0c1222; border: 1px solid var(--card-border);
+      border-radius: 8px; color: #fff; font-size: 0.95rem; outline: none; transition: 0.2s;
+    }
+    input:focus { border-color: var(--gold); }
+
+    .btn-submit {
+      width: 100%; background: var(--gold); color: #000; font-weight: 700;
+      padding: 0.85rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;
+      margin-top: 0.5rem; transition: 0.2s;
+    }
+    .btn-submit:hover { background: var(--gold-hover); }
+
+    .alert { padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <div class="logo">⚡ Cart<span>Revive</span></div>
+
+    <div class="tabs">
+      <div id="tabLogin" class="tab active" onclick="switchTab('login')">Iniciar Sesión</div>
+      <div id="tabRegister" class="tab" onclick="switchTab('register')">Registro (15d Gratis)</div>
+    </div>
+
+    <div id="alertBox" class="alert alert-error"></div>
+
+    <form id="authForm" onsubmit="handleSubmit(event)">
+      <div class="form-group" id="groupName" style="display: none;">
+        <label>Nombre de la Empresa / Tienda</label>
+        <input type="text" id="name" placeholder="Ej: Mi Tienda Online">
+      </div>
+
+      <div class="form-group">
+        <label>Correo Electrónico</label>
+        <input type="email" id="email" required placeholder="admin@tienda.com">
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="password" required placeholder="••••••••">
+      </div>
+
+      <button type="submit" id="btnAction" class="btn-submit">Entrar al Panel</button>
+    </form>
+  </div>
+
+  <script>
+    let mode = 'login';
+
+    function switchTab(newMode) {
+      mode = newMode;
+      document.getElementById('tabLogin').className = mode === 'login' ? 'tab active' : 'tab';
+      document.getElementById('tabRegister').className = mode === 'register' ? 'tab active' : 'tab';
+      document.getElementById('groupName').style.display = mode === 'register' ? 'block' : 'none';
+      document.getElementById('btnAction').innerText = mode === 'login' ? 'Entrar al Panel' : 'Crear Cuenta (15 días gratis)';
+      document.getElementById('alertBox').style.display = 'none';
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const name = document.getElementById('name').value.trim();
+      const alertBox = document.getElementById('alertBox');
+
+      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const payload = mode === 'login' ? { email, password } : { email, password, name };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alertBox.innerText = data.error || 'Error de autenticación';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        // Guardar token JWT y redirigir
+        localStorage.setItem('token', data.token);
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        alertBox.innerText = 'Error al contactar con el servidor';
+        alertBox.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
