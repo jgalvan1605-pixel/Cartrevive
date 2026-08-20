@@ -3,7 +3,8 @@
   if (!token) return;
 
   try {
-    const res = await fetch('/api/auth/me', {
+    const baseUrl = window.location.origin.includes('github.io') ? 'https://cartrevive.onrender.com' : '';
+    const res = await fetch(baseUrl + '/api/auth/me', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const user = await res.json();

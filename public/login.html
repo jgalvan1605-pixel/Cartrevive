@@ -237,7 +237,8 @@
       btnText.innerText = 'Procesando...';
       btnIcon.className = 'fa-solid fa-circle-notch fa-spin text-white';
 
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const baseUrl = window.location.origin.includes('github.io') ? 'https://cartrevive.onrender.com' : '';
+      const endpoint = baseUrl + (mode === 'login' ? '/api/auth/login' : '/api/auth/register');
       const payload = mode === 'login' 
         ? { email, password } 
         : { email, password, name: name || 'Mi Tienda Online', minThreshold: parseFloat(minThreshold) || 150 };
