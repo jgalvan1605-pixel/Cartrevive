@@ -1,4 +1,4 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyCors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
@@ -14,7 +14,7 @@ const app = Fastify({ logger: true });
 
 // 1. Desactivar el parser estricto por defecto y permitir JSON vacío
 app.removeContentTypeParser('application/json');
-app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body: string, done) => {
+app.addContentTypeParser('application/json', { parseAs: 'string' }, (_req: FastifyRequest, body: string, done: (err: Error | null, result?: any) => void) => {
   if (!body || body.trim().length === 0) {
     return done(null, {});
   }
@@ -43,7 +43,7 @@ app.register(fastifyStatic, {
   prefix: '/'
 });
 
-// Función auxiliar de cálculo de suscripción
+// Función auxiliar para estado de suscripción
 function calculateSubscriptionStatus(user: any) {
   if (user.subscriptionStatus === 'ACTIVE') {
     return { status: 'ACTIVE', daysLeft: null, isAllowed: true };
@@ -65,14 +65,14 @@ function calculateSubscriptionStatus(user: any) {
 // RUTAS DE AUTENTICACIÓN
 // -------------------------------------------------------------
 
-app.post('/api/auth/register', async (request, reply) => {
+app.post('/api/auth/register', async (request: FastifyRequest, reply: FastifyReply) => {
   const { email, password, name, minThreshold } = (request.body as any) || {};
 
   if (!email || !password) {
     return reply.status(400).send({ error: 'Email y contraseña requeridos' });
   }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await (prisma as any).user.findUnique({ where: { email } });
   if (existing) {
     return reply.status(400).send({ error: 'Este correo electrónico ya está registrado' });
   }
@@ -80,7 +80,7 @@ app.post('/api/auth/register', async (request, reply) => {
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + 15);
 
-  const user = await prisma.user.create({
+  const user = await (prisma as any).user.create({
     data: {
       email,
       password,
@@ -95,10 +95,10 @@ app.post('/api/auth/register', async (request, reply) => {
   return { token, user };
 });
 
-app.post('/api/auth/login', async (request, reply) => {
+app.post('/api/auth/login', async (request: FastifyRequest, reply: FastifyReply) => {
   const { email, password } = (request.body as any) || {};
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await (prisma as any).user.findUnique({ where: { email } });
   if (!user || user.password !== password) {
     return reply.status(401).send({ error: 'Credenciales inválidas' });
   }
@@ -107,11 +107,11 @@ app.post('/api/auth/login', async (request, reply) => {
   return { token, user };
 });
 
-app.get('/api/auth/me', async (request, reply) => {
+app.get('/api/auth/me', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     await request.jwtVerify();
     const payload = request.user as { id: string; email: string };
-    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+    const user = await (prisma as any).user.findUnique({ where: { id: payload.id } });
 
     if (!user) {
       return reply.status(404).send({ error: 'Usuario no encontrado' });
@@ -128,11 +128,11 @@ app.get('/api/auth/me', async (request, reply) => {
 // RUTAS DE STRIPE CHECKOUT
 // -------------------------------------------------------------
 
-app.post('/api/stripe/create-checkout-session', async (request, reply) => {
+app.post('/api/stripe/create-checkout-session', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     await request.jwtVerify();
     const payload = request.user as { id: string; email: string };
-    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+    const user = await (prisma as any).user.findUnique({ where: { id: payload.id } });
 
     if (!user) {
       return reply.status(404).send({ error: 'Usuario no encontrado' });
@@ -149,7 +149,7 @@ app.post('/api/stripe/create-checkout-session', async (request, reply) => {
         metadata: { userId: user.id }
       });
       customerId = customer.id;
-      await prisma.user.update({
+      await (prisma as any).user.update({
         where: { id: user.id },
         data: { stripeCustomerId: customerId }
       });
@@ -176,17 +176,17 @@ app.post('/api/stripe/create-checkout-session', async (request, reply) => {
 // RUTAS DE DASHBOARD Y MÉTRICAS
 // -------------------------------------------------------------
 
-app.get('/api/dashboard/stats', async (request, reply) => {
+app.get('/api/dashboard/stats', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     await request.jwtVerify();
     const payload = request.user as { id: string };
 
-    const totalCarts = await prisma.cartLead.count({ where: { userId: payload.id } });
-    const alertsSent = await prisma.cartLead.count({ where: { userId: payload.id, status: { in: ['NOTIFIED', 'RECOVERED'] } } });
-    const recoveredLeads = await prisma.cartLead.findMany({ where: { userId: payload.id, status: 'RECOVERED' } });
+    const totalCarts = await (prisma as any).cartLead.count({ where: { userId: payload.id } });
+    const alertsSent = await (prisma as any).cartLead.count({ where: { userId: payload.id, status: { in: ['NOTIFIED', 'RECOVERED'] } } });
+    const recoveredLeads = await (prisma as any).cartLead.findMany({ where: { userId: payload.id, status: 'RECOVERED' } });
 
     const recoveredCount = recoveredLeads.length;
-    const recoveredAmount = recoveredLeads.reduce((acc, lead) => acc + (lead.totalPrice || 0), 0);
+    const recoveredAmount = recoveredLeads.reduce((acc: number, lead: any) => acc + (lead.totalPrice || 0), 0);
 
     return { totalCarts, alertsSent, recoveredCount, recoveredAmount };
   } catch (err) {
@@ -194,12 +194,12 @@ app.get('/api/dashboard/stats', async (request, reply) => {
   }
 });
 
-app.get('/api/leads/recent', async (request, reply) => {
+app.get('/api/leads/recent', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     await request.jwtVerify();
     const payload = request.user as { id: string };
 
-    const leads = await prisma.cartLead.findMany({
+    const leads = await (prisma as any).cartLead.findMany({
       where: { userId: payload.id },
       orderBy: { createdAt: 'desc' },
       take: 10
@@ -215,7 +215,7 @@ app.get('/api/leads/recent', async (request, reply) => {
 // WEBHOOK SHOPIFY (CONTROL DE UMBRAL Y PAYWALL)
 // -------------------------------------------------------------
 
-app.post('/api/webhooks/shopify/checkouts', async (request, reply) => {
+app.post('/api/webhooks/shopify/checkouts', async (request: FastifyRequest, reply: FastifyReply) => {
   const body = (request.body as any) || {};
 
   const shopId = request.headers['x-shop-id'] as string;
@@ -223,7 +223,7 @@ app.post('/api/webhooks/shopify/checkouts', async (request, reply) => {
     return reply.status(400).send({ error: 'Falta cabecera x-shop-id' });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: shopId } });
+  const user = await (prisma as any).user.findUnique({ where: { id: shopId } });
   if (!user) {
     return reply.status(404).send({ error: 'Tienda no registrada' });
   }
@@ -238,7 +238,7 @@ app.post('/api/webhooks/shopify/checkouts', async (request, reply) => {
     return reply.send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  const lead = await prisma.cartLead.create({
+  const lead = await (prisma as any).cartLead.create({
     data: {
       userId: user.id,
       customerName: body.customer?.first_name ? `${body.customer.first_name} ${body.customer.last_name || ''}` : 'Cliente Web',
