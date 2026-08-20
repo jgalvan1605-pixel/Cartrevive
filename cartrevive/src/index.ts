@@ -6,6 +6,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -77,13 +78,14 @@ app.post('/api/auth/register', async (request: FastifyRequest, reply: FastifyRep
     return reply.status(400).send({ error: 'Este correo electrónico ya está registrado' });
   }
 
+  const hashedPassword = await bcrypt.hash(password, 10);
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + 15);
 
   const tenant = await prisma.tenant.create({
     data: {
       email,
-      password,
+      password: hashedPassword,
       name: name || 'Mi Tienda',
       minThreshold: parseFloat(minThreshold) || 150,
       trialEndsAt,
@@ -98,8 +100,23 @@ app.post('/api/auth/register', async (request: FastifyRequest, reply: FastifyRep
 app.post('/api/auth/login', async (request: FastifyRequest, reply: FastifyReply) => {
   const { email, password } = (request.body as any) || {};
 
+  if (!email || !password) {
+    return reply.status(400).send({ error: 'Email y contraseña requeridos' });
+  }
+
   const tenant = await prisma.tenant.findUnique({ where: { email } });
-  if (!tenant || tenant.password !== password) {
+  if (!tenant || !tenant.password) {
+    return reply.status(401).send({ error: 'Credenciales inválidas' });
+  }
+
+  let isMatch = false;
+  if (tenant.password.startsWith('$2a$') || tenant.password.startsWith('$2b$') || tenant.password.startsWith('$2y$')) {
+    isMatch = await bcrypt.compare(password, tenant.password);
+  } else {
+    isMatch = (tenant.password === password);
+  }
+
+  if (!isMatch) {
     return reply.status(401).send({ error: 'Credenciales inválidas' });
   }
 
@@ -205,7 +222,6 @@ app.get('/api/leads/recent', async (request: FastifyRequest, reply: FastifyReply
       take: 10
     });
 
-    // Mapeo seguro para transformar BigInt a string/número en JSON
     const formattedLeads = logs.map(l => ({
       id: l.id,
       customerName: l.customerName,
