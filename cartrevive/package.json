@@ -4,7 +4,8 @@
   "description": "Bridge SaaS Shopify a Holded CRM",
   "main": "cartrevive/src/index.ts",
   "scripts": {
-    "build": "npx prisma generate && npx prisma db push",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && prisma db push",
     "start": "tsx cartrevive/src/index.ts",
     "dev": "tsx watch cartrevive/src/index.ts"
   },
@@ -20,12 +21,13 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "fastify": "^5.12.1",
+    "prisma": "^6.4.1",
+    "stripe": "^22.5.0",
     "tsx": "^4.23.12"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^26.2.0",
-    "prisma": "^6.4.1",
-    "typescript": "^7.0.2"
+    "typescript": "^5.4.5"
   }
 }
