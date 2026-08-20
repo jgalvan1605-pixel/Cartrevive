@@ -1,41 +1,55 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><title>CartRevive</title>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>CartRevive Login</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head><body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
 <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-<h1 class="text-xl font-bold text-center mb-4"><i class="fa-solid fa-bolt text-indigo-500 mr-2"></i>CartRevive</h1>
-<div id="msg" class="hidden p-3 mb-4 rounded-xl text-xs font-semibold"></div>
+<h1 class="text-xl font-bold text-center mb-4 text-indigo-400">CartRevive Panel</h1>
+<div id="debugLog" class="p-3 mb-4 rounded-xl text-xs font-mono bg-black/60 border border-slate-800 text-slate-300 min-h-[60px] whitespace-pre-wrap">Esperando acción...</div>
 <div class="space-y-3">
 <div><label class="text-xs text-slate-400">Email</label>
 <input id="email" type="email" value="administracion@akonfitness.com" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm mt-1 text-white"></div>
 <div><label class="text-xs text-slate-400">Contraseña</label>
 <input id="pass" type="password" value="password123" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm mt-1 text-white"></div>
-<button id="btn" onclick="doAuth()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl text-sm mt-2 transition">Entrar al Panel</button>
+<button id="btn" onclick="iniciarSesionDirecta()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl text-sm mt-2 transition cursor-pointer">Entrar al Panel</button>
 </div></div><script>
-async function doAuth() {
+function log(msg) {
+  const d = document.getElementById('debugLog');
+  d.innerText += '\n' + msg;
+  console.log(msg);
+}
+async function iniciarSesionDirecta() {
+  const logBox = document.getElementById('debugLog');
+  logBox.innerText = '1. Botón pulsado.';
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('pass').value;
-  const msg = document.getElementById('msg');
   const btn = document.getElementById('btn');
-  msg.className = 'hidden'; btn.innerText = 'Verificando...'; btn.disabled = true;
+  btn.disabled = true;
+  btn.innerText = 'Procesando...';
+  const targetHost = (window.location.hostname.includes('render.com')) ? '' : 'https://cartrevive.onrender.com';
+  log('2. Conectando a: ' + (targetHost || 'mismo servidor') + '/api/auth/login');
   try {
-    const url = window.location.origin.includes('github.io') ? 'https://cartrevive.onrender.com' : '';
-    const r = await fetch(url + '/api/auth/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(targetHost + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const d = await r.json();
-    if (!r.ok || !d.token) throw new Error(d.error || 'Credenciales inválidas');
-    localStorage.setItem('token', d.token);
-    localStorage.setItem('cartrevive_token', d.token);
-    msg.className = 'p-3 mb-4 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-    msg.innerText = '¡Correcto! Accediendo...';
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 300);
+    log('3. Respuesta HTTP: ' + res.status);
+    const data = await res.json();
+    if (!res.ok || !data.token) {
+      log('❌ Error: ' + (data.error || 'Credenciales no válidas'));
+      btn.disabled = false;
+      btn.innerText = 'Entrar al Panel';
+      return;
+    }
+    log('4. Token recibido. Guardando sesión...');
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('cartrevive_token', data.token);
+    log('5. Redirigiendo a dashboard...');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
   } catch (err) {
-    msg.className = 'p-3 mb-4 rounded-xl text-xs font-semibold bg-red-500/20 text-red-300 border border-red-500/30';
-    msg.innerText = err.message || 'Error de conexión';
-    btn.disabled = false; btn.innerText = 'Entrar al Panel';
+    log('❌ Excepción de red: ' + err.message);
+    btn.disabled = false;
+    btn.innerText = 'Entrar al Panel';
   }
 }
 </script></body></html>
