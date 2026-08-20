@@ -5,6 +5,7 @@ import fastifyJwt from '@fastify/jwt';
 import path from 'path';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
+import Stripe from 'stripe';
 import { ShopifyCheckoutEvent } from './types/shopify';
 import { HoldedService } from './services/holded';
 import { sendTelegramAlert, sendTelegramMessage } from './services/telegram';
@@ -14,6 +15,11 @@ dotenv.config();
 
 const app = Fastify({ logger: true });
 const holdedService = new HoldedService();
+
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
+const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: '2023-10-16' as any,
+});
 
 app.register(cors, { origin: '*' });
 app.register(fastifyJwt, {
@@ -33,16 +39,37 @@ app.decorate('authenticate', async (request: any, reply: any) => {
   }
 });
 
-// Función auxiliar para limpiar tokens de espacios o caracteres invisibles
 function cleanBotToken(token?: string | null): string {
   if (!token) return '8620405434:AAH_3bm8Gvo_BJ6b6nUCXJPK36cLDkPLJV8';
   return token.replace(/[^\x20-\x7E]/g, '').trim();
 }
 
-// Health check
-app.get('/api/health', async () => ({ status: 'ok', version: '2.0.0-telegram-autolink' }));
+// Función para calcular días restantes y estado de acceso
+function getSubscriptionInfo(tenant: any) {
+  const now = new Date();
+  
+  if (tenant.subscriptionStatus === 'ACTIVE') {
+    return { status: 'ACTIVE', isAllowed: true, daysLeft: 0 };
+  }
 
-// Auth: Register
+  const trialEnds = tenant.trialEndsAt 
+    ? new Date(tenant.trialEndsAt) 
+    : new Date(new Date(tenant.createdAt).getTime() + 15 * 24 * 60 * 60 * 1000);
+
+  const diffMs = trialEnds.getTime() - now.getTime();
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (daysLeft > 0) {
+    return { status: 'TRIALING', isAllowed: true, daysLeft };
+  }
+
+  return { status: 'EXPIRED', isAllowed: false, daysLeft: 0 };
+}
+
+// Health check
+app.get('/api/health', async () => ({ status: 'ok', version: '2.1.0-stripe-trial' }));
+
+// Auth: Register (Asigna 15 días gratis de inicio)
 app.post('/api/auth/register', async (request, reply) => {
   const { name, email, password, minThreshold } = request.body as any;
   if (!name || !email || !password) return reply.status(400).send({ error: 'Faltan datos obligatorios' });
@@ -51,8 +78,17 @@ app.post('/api/auth/register', async (request, reply) => {
   if (existing) return reply.status(400).send({ error: 'El email ya está registrado' });
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  const trialEndsAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000); // 15 días a partir de hoy
+
   const tenant = await prisma.tenant.create({
-    data: { name, email, password: hashedPassword, minThreshold: minThreshold ? parseFloat(minThreshold) : 150.0 }
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      minThreshold: minThreshold ? parseFloat(minThreshold) : 150.0,
+      trialEndsAt,
+      subscriptionStatus: 'TRIALING'
+    }
   });
 
   const token = app.jwt.sign({ id: tenant.id, email: tenant.email });
@@ -72,11 +108,20 @@ app.post('/api/auth/login', async (request, reply) => {
   return reply.send({ token, tenant });
 });
 
+// Info del usuario con estado de suscripción
 app.get('/api/auth/me', { preHandler: [(app as any).authenticate] }, async (request: any) => {
-  return prisma.tenant.findUnique({
+  const tenant = await prisma.tenant.findUnique({
     where: { id: request.user.id },
     include: { agents: { orderBy: { createdAt: 'asc' } } }
   });
+
+  if (!tenant) return null;
+
+  const subInfo = getSubscriptionInfo(tenant);
+  return {
+    ...tenant,
+    subscriptionInfo: subInfo
+  };
 });
 
 app.post('/api/tenant/config', { preHandler: [(app as any).authenticate] }, async (request: any, reply) => {
@@ -117,10 +162,91 @@ app.post('/api/tenant/test-telegram', { preHandler: [(app as any).authenticate] 
   });
 
   if (!ok) return reply.status(400).send({ error: 'No se pudo enviar el mensaje a Telegram.' });
-  return reply.send({ status: 'success', message: '¡Notificación de prueba enviada a Telegram con éxito!' });
+  return reply.send({ status: 'success', message: '¡Notificación enviada a Telegram!' });
 });
 
-// WEBHOOK OFICIAL DE TELEGRAM: AUTO-VINCULACIÓN POR DEEP-LINK (/start <tenantId>)
+// --- STRIPE: CREAR SESIÓN DE CHECKOUT ---
+app.post('/api/stripe/create-checkout-session', { preHandler: [(app as any).authenticate] }, async (request: any, reply) => {
+  const tenant = await prisma.tenant.findUnique({ where: { id: request.user.id } });
+  if (!tenant) return reply.status(404).send({ error: 'Tenant no encontrado' });
+
+  const priceId = process.env.STRIPE_PRICE_ID;
+  const appUrl = process.env.APP_URL || 'https://cartrevive.onrender.com';
+
+  if (!priceId) {
+    return reply.status(400).send({ error: 'Falta configurar STRIPE_PRICE_ID en las variables de entorno' });
+  }
+
+  try {
+    let customerId = tenant.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: tenant.email,
+        name: tenant.name,
+        metadata: { tenantId: tenant.id }
+      });
+      customerId = customer.id;
+      await prisma.tenant.update({
+        where: { id: tenant.id },
+        data: { stripeCustomerId: customerId }
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      success_url: `${appUrl}/dashboard.html?subscribed=true`,
+      cancel_url: `${appUrl}/billing.html?canceled=true`,
+      metadata: { tenantId: tenant.id }
+    });
+
+    return reply.send({ url: session.url });
+  } catch (err: any) {
+    app.log.error(err);
+    return reply.status(500).send({ error: 'Error al generar la sesión de pago con Stripe' });
+  }
+});
+
+// --- STRIPE: WEBHOOK PARA SINCRONIZAR SUSCRIPCIONES ---
+app.post('/api/stripe/webhook', async (request: any, reply) => {
+  const event = request.body;
+
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const tenantId = session.metadata?.tenantId;
+
+      if (tenantId) {
+        await prisma.tenant.update({
+          where: { id: tenantId },
+          data: {
+            subscriptionStatus: 'ACTIVE',
+            stripeSubscriptionId: session.subscription as string
+          }
+        });
+        console.log(`[Stripe] Suscripción activada para el tenant: ${tenantId}`);
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object;
+      const customerId = subscription.customer as string;
+
+      await prisma.tenant.updateMany({
+        where: { stripeCustomerId: customerId },
+        data: { subscriptionStatus: 'EXPIRED' }
+      });
+      console.log(`[Stripe] Suscripción cancelada para cliente: ${customerId}`);
+    }
+
+    return reply.send({ received: true });
+  } catch (err: any) {
+    console.error('Error procesando Webhook de Stripe:', err);
+    return reply.status(400).send({ error: 'Webhook handler failed' });
+  }
+});
+
+// WEBHOOK OFICIAL DE TELEGRAM
 app.post('/api/telegram/webhook', async (request: any, reply) => {
   const update = request.body;
   const botToken = cleanBotToken(process.env.TELEGRAM_BOT_TOKEN);
@@ -132,7 +258,7 @@ app.post('/api/telegram/webhook', async (request: any, reply) => {
 
     if (text.startsWith('/start')) {
       const parts = text.split(' ');
-      const startParam = parts[1]; // tenantId
+      const startParam = parts[1];
 
       if (startParam) {
         try {
@@ -146,7 +272,6 @@ app.post('/api/telegram/webhook', async (request: any, reply) => {
               }
             });
 
-            // Enviar mensaje directo con confirmación de enlace
             await sendTelegramMessage(
               botToken,
               chatId,
@@ -276,6 +401,12 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
 
   if (!tenant || !tenant.isActive) return reply.status(404).send({ error: 'Tenant inactivo' });
 
+  // Control de suscripción / prueba en el webhook
+  const subInfo = getSubscriptionInfo(tenant);
+  if (!subInfo.isAllowed) {
+    return reply.status(403).send({ error: 'Período de prueba vencido. Requiere suscripción activa.' });
+  }
+
   const customerName = payload.customer 
     ? `${payload.customer.first_name || ''} ${payload.customer.last_name || ''}`.trim() || 'Cliente Anónimo'
     : 'Cliente Anónimo';
@@ -286,7 +417,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     ?.map(item => `${item.quantity}x ${item.title} (${item.price} ${payload.currency})`)
     .join(', ') || 'Sin artículos';
 
-  // 1. Comprobar Umbral Mínimo
+  // 1. Umbral mínimo
   if (cartAmount < tenant.minThreshold) {
     await prisma.cartLog.upsert({
       where: { tenantId_shopifyCartId: { tenantId: tenant.id, shopifyCartId: BigInt(payload.id) } },
@@ -307,7 +438,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
     return reply.status(200).send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  // 2. Round Robin de Comerciales
+  // 2. Round Robin
   const eligibleAgents = tenant.agents.filter(a => {
     const minOk = cartAmount >= a.minAmount;
     const maxOk = a.maxAmount === null || a.maxAmount === undefined || cartAmount <= a.maxAmount;
@@ -380,7 +511,7 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
       }
     });
 
-    // 3. Telegram Push Garantizado con Await y Sanitización
+    // 3. Telegram Push con Await
     const activeToken = cleanBotToken(tenant.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN);
     const targetChatId = tenant.telegramChatId ? tenant.telegramChatId.trim() : null;
 
@@ -397,7 +528,6 @@ app.post('/api/webhooks/shopify/:tenantId', async (request, reply) => {
           assignedAgentName,
           recoveryUrl: payload.abandoned_checkout_url
         });
-        console.log(`[Telegram] Alerta de carrito entregada a chat ID: ${targetChatId}`);
       } catch (tgErr: any) {
         console.error('[Telegram] Error enviando alerta:', tgErr.response?.data || tgErr.message);
       }

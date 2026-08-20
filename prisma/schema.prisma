@@ -1,75 +1,82 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Tenant {
-  id                  String       @id @default(uuid())
-  name                String
-  email               String       @unique
-  password            String       @default("")
-  shopifySecret       String?
-  holdedApiKey        String?
-  holdedFunnelId      String?
-  holdedStageId       String?
-  holdedWonStageId    String?
-  telegramBotToken    String?      // Token del Bot de Telegram
-  telegramChatId      String?      // ID del Chat/Grupo de Alertas
-  minThreshold        Float        @default(150.00)
-  whatsappTemplate    String?      @default("Hola {nombre}, te contacto de la tienda porque vi tu pedido pendiente por {monto} {moneda} ({articulos}). ¿Te ha surgido alguna duda durante el pago? Te facilito tu enlace directo: {link}")
-  plan                String       @default("PRO")
-  isActive            Boolean      @default(true)
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+generator client {
+  provider = "prisma-client-js"
+}
 
-  agents              SalesAgent[]
-  cartLogs            CartLog[]
+model Tenant {
+  id                   String       @id @default(uuid())
+  name                 String
+  email                String       @unique
+  password             String?
+  shopifySecret        String?
+  holdedApiKey         String?
+  holdedFunnelId       String?
+  holdedStageId        String?
+  holdedWonStageId     String?
+  telegramBotToken     String?
+  telegramChatId       String?
+  minThreshold         Float        @default(150.0)
+  whatsappTemplate     String?      @default("Hola {nombre}, te contacto de la tienda porque vi tu pedido pendiente por {monto} {moneda} ({articulos}). ¿Te ha surgido alguna duda durante el pago? Te facilito tu enlace directo: {link}")
+  plan                 String       @default("PRO")
+  isActive             Boolean      @default(true)
+
+  // --- CONTROL DE PRUEBA 15 DÍAS Y STRIPE ---
+  trialEndsAt          DateTime?
+  subscriptionStatus   String       @default("TRIALING") // TRIALING | ACTIVE | EXPIRED | CANCELED
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  agents               SalesAgent[]
+  cartLogs             CartLog[]
 }
 
 model SalesAgent {
-  id                  String       @id @default(uuid())
-  tenantId            String
-  tenant              Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  name                String
-  email               String?
-  phone               String?
-  telegramChatId      String?      // ID personal de Telegram del comercial
-  holdedUserId        String?
-  minAmount           Float        @default(0)
-  maxAmount           Float?
-  isActive            Boolean      @default(true)
-  lastAssignedAt      DateTime?
-  createdAt           DateTime     @default(now())
+  id             String    @id @default(uuid())
+  tenantId       String
+  name           String
+  email          String?
+  phone          String?
+  telegramChatId String?
+  holdedUserId   String?
+  minAmount      Float     @default(0.0)
+  maxAmount      Float?
+  isActive       Boolean   @default(true)
+  lastAssignedAt DateTime?
+  createdAt      DateTime  @default(now())
 
-  assignedCarts       CartLog[]
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedCarts  CartLog[]
 }
 
 model CartLog {
-  id                  Int          @id @default(autoincrement())
-  tenantId            String
-  tenant              Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  shopifyCartId       BigInt
-  shopifyOrderId      BigInt?
-  customerName        String?
-  customerEmail       String?
-  customerPhone       String?
-  cartAmount          Float
-  currency            String       @default("EUR")
-  status              String
-  holdedDealId        String?
-  
-  agentId             String?
-  agent               SalesAgent?  @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  assignedToName      String?
-  
-  recoveryUrl         String?
-  itemsSummary        String?
-  recoveredAt         DateTime?
-  createdAt           DateTime     @default(now())
+  id             Int       @id @default(autoincrement())
+  tenantId       String
+  shopifyCartId  BigInt
+  shopifyOrderId BigInt?
+  customerName   String
+  customerEmail  String?
+  customerPhone  String?
+  cartAmount     Float
+  currency       String    @default("EUR")
+  status         String    @default("QUALIFIED") // QUALIFIED, IGNORED, RECOVERED
+  holdedDealId   String?
+  agentId        String?
+  assignedToName String?
+  recoveryUrl    String?
+  itemsSummary   String?
+  recoveredAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent          SalesAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, shopifyCartId])
 }

@@ -20,6 +20,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "fastify": "^5.12.1",
+    "stripe": "^22.5.0",
     "tsx": "^4.23.12"
   },
   "devDependencies": {
