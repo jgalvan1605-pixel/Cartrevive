@@ -12,25 +12,38 @@ dotenv.config();
 const prisma = new PrismaClient();
 const app = Fastify({ logger: true });
 
-// Inicializar Stripe
+// 1. Desactivar el parser estricto por defecto y permitir JSON vacío
+app.removeContentTypeParser('application/json');
+app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body: string, done) => {
+  if (!body || body.trim().length === 0) {
+    return done(null, {});
+  }
+  try {
+    const json = JSON.parse(body);
+    done(null, json);
+  } catch (err: any) {
+    err.statusCode = 400;
+    done(err, undefined);
+  }
+});
+
+// 2. Inicializar Stripe
 const stripeKey = process.env.STRIPE_SECRET_KEY || '';
 const stripe = new Stripe(stripeKey);
 
-// Registrar CORS
+// 3. Plugins: CORS y JWT
 app.register(fastifyCors, { origin: true });
-
-// Registrar JWT
 app.register(fastifyJwt, {
   secret: process.env.JWT_SECRET || 'super-secret-cartrevive-key-2026'
 });
 
-// Servir archivos estáticos (Frontend en public/)
+// 4. Servir Frontend estático desde public/
 app.register(fastifyStatic, {
   root: path.join(process.cwd(), 'public'),
   prefix: '/'
 });
 
-// Middleware auxiliar de suscripción
+// Función auxiliar de cálculo de suscripción
 function calculateSubscriptionStatus(user: any) {
   if (user.subscriptionStatus === 'ACTIVE') {
     return { status: 'ACTIVE', daysLeft: null, isAllowed: true };
@@ -53,7 +66,7 @@ function calculateSubscriptionStatus(user: any) {
 // -------------------------------------------------------------
 
 app.post('/api/auth/register', async (request, reply) => {
-  const { email, password, name, minThreshold } = request.body as any;
+  const { email, password, name, minThreshold } = (request.body as any) || {};
 
   if (!email || !password) {
     return reply.status(400).send({ error: 'Email y contraseña requeridos' });
@@ -64,14 +77,13 @@ app.post('/api/auth/register', async (request, reply) => {
     return reply.status(400).send({ error: 'Este correo electrónico ya está registrado' });
   }
 
-  // 15 días de prueba a partir de ahora
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + 15);
 
   const user = await prisma.user.create({
     data: {
       email,
-      password, // En producción puedes hashear con bcrypt
+      password,
       name: name || 'Mi Tienda',
       minThreshold: parseFloat(minThreshold) || 150,
       trialEndsAt,
@@ -84,7 +96,7 @@ app.post('/api/auth/register', async (request, reply) => {
 });
 
 app.post('/api/auth/login', async (request, reply) => {
-  const { email, password } = request.body as any;
+  const { email, password } = (request.body as any) || {};
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || user.password !== password) {
@@ -113,7 +125,7 @@ app.get('/api/auth/me', async (request, reply) => {
 });
 
 // -------------------------------------------------------------
-// RUTAS DE STRIPE CHECKOUT Y FACTURACIÓN
+// RUTAS DE STRIPE CHECKOUT
 // -------------------------------------------------------------
 
 app.post('/api/stripe/create-checkout-session', async (request, reply) => {
@@ -129,7 +141,6 @@ app.post('/api/stripe/create-checkout-session', async (request, reply) => {
     const priceId = process.env.STRIPE_PRICE_ID || 'price_1U6R0QL9uHcwhjdCtnsiOcqz';
     const appUrl = process.env.APP_URL || 'https://cartrevive.onrender.com';
 
-    // Obtener o crear cliente en Stripe
     let customerId = user.stripeCustomerId;
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -149,7 +160,7 @@ app.post('/api/stripe/create-checkout-session', async (request, reply) => {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
-      success_url: `${appUrl}/billing.html?success=true`,
+      success_url: `${appUrl}/dashboard.html?subscribed=true`,
       cancel_url: `${appUrl}/billing.html?canceled=true`,
       metadata: { userId: user.id }
     });
@@ -205,7 +216,7 @@ app.get('/api/leads/recent', async (request, reply) => {
 // -------------------------------------------------------------
 
 app.post('/api/webhooks/shopify/checkouts', async (request, reply) => {
-  const body = request.body as any;
+  const body = (request.body as any) || {};
 
   const shopId = request.headers['x-shop-id'] as string;
   if (!shopId) {
@@ -217,7 +228,6 @@ app.post('/api/webhooks/shopify/checkouts', async (request, reply) => {
     return reply.status(404).send({ error: 'Tienda no registrada' });
   }
 
-  // Comprobar si el periodo de prueba o suscripción permite procesar
   const subInfo = calculateSubscriptionStatus(user);
   if (!subInfo.isAllowed) {
     return reply.status(403).send({ error: 'Periodo de prueba expirado. Suscripción requerida.' });
@@ -228,7 +238,6 @@ app.post('/api/webhooks/shopify/checkouts', async (request, reply) => {
     return reply.send({ status: 'ignored', reason: 'Below threshold' });
   }
 
-  // Registrar lead
   const lead = await prisma.cartLead.create({
     data: {
       userId: user.id,
