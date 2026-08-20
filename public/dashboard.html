@@ -3,241 +3,267 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CartRevive - Panel de Control</title>
+  <title>Dashboard - CartRevive</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.05); }
+    }
+    .animate-glow {
+      animation: pulse-slow 6s ease-in-out infinite;
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-20 md:pb-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white flex flex-col justify-between relative overflow-x-hidden">
 
-  <!-- HEADER CON BOTÓN MÓVIL -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-4 md:px-6 py-3 flex justify-between items-center">
-    <div class="flex items-center space-x-3 md:space-x-6">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
-          <i class="fa-solid fa-cart-shopping"></i>
-        </div>
-        <div>
-          <h1 class="text-sm md:text-base font-semibold text-white truncate max-w-[140px] md:max-w-none" id="tenantName">Cargando...</h1>
-          <p class="text-[10px] md:text-[11px] text-slate-400" id="tenantPlan">Plan Pro Commerce</p>
-        </div>
-      </div>
+  <!-- GLOW DECORATIVO DE FONDO -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] h-[450px] bg-gradient-to-tr from-indigo-600/20 via-sky-500/20 to-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10 animate-glow"></div>
 
-      <!-- Navegación Desktop -->
-      <nav class="hidden md:flex items-center space-x-2 text-xs font-medium">
-        <a href="/dashboard.html" class="px-3 py-1.5 rounded-lg bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
-          <i class="fa-solid fa-chart-line mr-1.5"></i> Dashboard
-        </a>
-        <a href="/sales.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
-          <i class="fa-solid fa-headset mr-1.5"></i> Portal Comercial
-        </a>
-        <a href="/integrations.html" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
-          <i class="fa-solid fa-plug mr-1.5"></i> Integraciones & APIs
-        </a>
+  <!-- NAVBAR UNIFICADO -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur sticky top-0 z-40 px-4 md:px-8 py-3.5 flex justify-between items-center max-w-7xl w-full mx-auto">
+    <div class="flex items-center space-x-6">
+      <a href="/dashboard.html" class="flex items-center space-x-3 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition">
+          <i class="fa-solid fa-rotate-right"></i>
+        </div>
+        <span class="text-base md:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">CartRevive</span>
+      </a>
+
+      <!-- Navegación Interna -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <a href="/dashboard.html" class="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 border border-slate-800 rounded-xl transition">Dashboard</a>
+        <a href="/sales.html" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition">Ventas & Leads</a>
+        <a href="/integrations.html" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition">Integraciones</a>
+        <a href="/billing.html" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition">Suscripción</a>
       </nav>
     </div>
 
-    <div class="flex items-center space-x-2">
-      <button onclick="logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-300 rounded-lg text-xs font-medium transition border border-slate-700">
-        <i class="fa-solid fa-arrow-right-from-bracket md:mr-1"></i> <span class="hidden md:inline">Salir</span>
+    <div class="flex items-center space-x-3">
+      <span id="shopNameDisplay" class="text-xs text-slate-400 hidden sm:inline-block">Cargando...</span>
+      <button onclick="logout()" class="px-3 py-1.5 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl border border-red-500/20 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span class="hidden sm:inline">Salir</span>
       </button>
     </div>
   </header>
 
-  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVIL (BOTTOM NAV ESTILO APP) -->
-  <div class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 z-40 px-6 py-2 flex justify-between items-center text-xs">
-    <a href="/dashboard.html" class="flex flex-col items-center gap-1 text-indigo-400">
-      <i class="fa-solid fa-chart-line text-base"></i>
-      <span class="text-[10px] font-medium">Dashboard</span>
-    </a>
-    <a href="/sales.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white">
-      <i class="fa-solid fa-headset text-base"></i>
-      <span class="text-[10px] font-medium">Comerciales</span>
-    </a>
-    <a href="/integrations.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white">
-      <i class="fa-solid fa-plug text-base"></i>
-      <span class="text-[10px] font-medium">Conexiones</span>
-    </a>
-  </div>
-
-  <main class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-7xl w-full mx-auto px-4 md:px-8 py-8 flex-1 space-y-6">
     
-    <!-- Métricas Clave de Negocio -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
-      <div class="bg-gradient-to-br from-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-2xl p-4 md:p-5 shadow-lg shadow-emerald-950/20">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] md:text-xs font-semibold text-emerald-400 uppercase tracking-wider">Recuperado</span>
-          <span class="p-1.5 md:p-2 bg-emerald-500/10 text-emerald-400 rounded-lg md:rounded-xl text-xs"><i class="fa-solid fa-sack-dollar"></i></span>
+    <!-- BANNER DE PRUEBA / SUSCRIPCIÓN -->
+    <div id="trialBanner" class="p-4 rounded-2xl border bg-amber-500/10 border-amber-500/20 backdrop-blur transition-all flex flex-col sm:flex-row items-center justify-between gap-4 hidden">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg flex-shrink-0">
+          <i class="fa-solid fa-hourglass-half"></i>
         </div>
-        <div class="mt-2 text-xl md:text-2xl font-extrabold text-white font-mono" id="statRecoveredAmount">0.00 €</div>
-        <div class="text-[10px] md:text-xs text-emerald-400/80 mt-1 font-medium truncate" id="statRecoveredCount">0 ventas</div>
+        <div>
+          <h4 class="text-xs md:text-sm font-bold text-white">Periodo de Prueba de 15 Días Activo</h4>
+          <p id="trialDaysText" class="text-[11px] md:text-xs text-slate-400">Te quedan X días de acceso gratuito total.</p>
+        </div>
       </div>
+      <a href="/billing.html" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/25 transition text-center">
+        Activar Plan Pro (49 €/mes)
+      </a>
+    </div>
 
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-5 shadow-sm">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] md:text-xs font-medium text-slate-400 uppercase tracking-wider">Pipeline</span>
-          <span class="p-1.5 md:p-2 bg-indigo-500/10 text-indigo-400 rounded-lg md:rounded-xl text-xs"><i class="fa-solid fa-spinner"></i></span>
-        </div>
-        <div class="mt-2 text-xl md:text-2xl font-bold text-indigo-400 font-mono" id="statPipelineAmount">0.00 €</div>
-        <div class="text-[10px] md:text-xs text-slate-500 mt-1 truncate" id="statPipelineCount">0 en curso</div>
+    <!-- CABECERA DASHBOARD -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Panel de Control</h1>
+        <p class="text-xs text-slate-400">Rendimiento en tiempo real de Speed-to-Lead y ventas recuperadas.</p>
       </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-5 shadow-sm">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] md:text-xs font-medium text-slate-400 uppercase tracking-wider">Cierre</span>
-          <span class="p-1.5 md:p-2 bg-violet-500/10 text-violet-400 rounded-lg md:rounded-xl text-xs"><i class="fa-solid fa-bullseye"></i></span>
-        </div>
-        <div class="mt-2 text-xl md:text-2xl font-bold text-white font-mono" id="statConversionRate">0 %</div>
-        <div class="text-[10px] md:text-xs text-slate-500 mt-1">Efectividad</div>
-      </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-5 shadow-sm">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] md:text-xs font-medium text-slate-400 uppercase tracking-wider">Omitidos</span>
-          <span class="p-1.5 md:p-2 bg-slate-800 text-slate-400 rounded-lg md:rounded-xl text-xs"><i class="fa-solid fa-filter"></i></span>
-        </div>
-        <div class="mt-2 text-xl md:text-2xl font-bold text-slate-400 font-mono" id="statIgnored">0</div>
-        <div class="text-[10px] md:text-xs text-slate-500 mt-1">&lt; Umbral</div>
+      <div class="flex items-center gap-3">
+        <a href="/integrations.html" class="px-3.5 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition flex items-center gap-2">
+          <i class="fa-brands fa-telegram text-sky-400"></i>
+          <span>Configurar Telegram & Bot</span>
+        </a>
       </div>
     </div>
 
-    <!-- Tabla General de Auditoría -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-      <div class="px-4 md:px-6 py-4 border-b border-slate-800 flex justify-between items-center">
-        <div>
-          <h2 class="text-sm md:text-base font-semibold text-white">Historial de Carritos</h2>
-          <p class="text-[11px] text-slate-400">Seguimiento en vivo</p>
+    <!-- TARJETAS DE MÉTRICAS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <div class="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-semibold mb-2">
+          <span>Carritos Detectados</span>
+          <i class="fa-solid fa-cart-shopping text-sky-400"></i>
         </div>
-        <button onclick="loadLogs()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
-          <i class="fa-solid fa-rotate-right"></i> <span class="hidden sm:inline">Actualizar</span>
-        </button>
+        <div id="statTotalCarts" class="text-2xl md:text-3xl font-extrabold text-white">0</div>
+        <div class="text-[11px] text-slate-500 mt-1">Superan tu umbral mínimo</div>
+      </div>
+
+      <div class="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-semibold mb-2">
+          <span>Alertas Enviadas</span>
+          <i class="fa-brands fa-telegram text-sky-400"></i>
+        </div>
+        <div id="statAlertsSent" class="text-2xl md:text-3xl font-extrabold text-sky-400">0</div>
+        <div class="text-[11px] text-slate-500 mt-1">Speed-to-Lead &lt; 5s a comerciales</div>
+      </div>
+
+      <div class="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-semibold mb-2">
+          <span>Ventas Recuperadas</span>
+          <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        </div>
+        <div id="statRecoveredCount" class="text-2xl md:text-3xl font-extrabold text-emerald-400">0</div>
+        <div class="text-[11px] text-slate-500 mt-1">Confirmadas en Shopify / Holded</div>
+      </div>
+
+      <div class="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-semibold mb-2">
+          <span>Facturación Rescatada</span>
+          <i class="fa-solid fa-euro-sign text-indigo-400"></i>
+        </div>
+        <div id="statRecoveredAmount" class="text-2xl md:text-3xl font-extrabold text-indigo-400">0,00 €</div>
+        <div class="text-[11px] text-slate-500 mt-1">Impacto directo en caja</div>
+      </div>
+
+    </div>
+
+    <!-- TABLA DE LEADS Y ACTIVIDAD RECIENTE -->
+    <div class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 backdrop-blur shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+        <div>
+          <h3 class="text-sm md:text-base font-bold text-white">Últimos Carritos & Asignaciones</h3>
+          <p class="text-[11px] text-slate-400">Flujo en tiempo real de leads asignados a tu equipo comercial</p>
+        </div>
+        <a href="/sales.html" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300">Ver todos &rarr;</a>
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-950/50 text-[11px] md:text-xs uppercase text-slate-400 border-b border-slate-800">
-            <tr>
-              <th class="px-4 md:px-6 py-3.5">ID / Pedido</th>
-              <th class="px-4 md:px-6 py-3.5">Cliente</th>
-              <th class="px-4 md:px-6 py-3.5">Monto</th>
-              <th class="px-4 md:px-6 py-3.5">Comercial</th>
-              <th class="px-4 md:px-6 py-3.5">Estado</th>
-              <th class="px-4 md:px-6 py-3.5 text-right">Acción</th>
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="text-slate-400 border-b border-slate-800/80">
+              <th class="pb-3 font-semibold">Cliente</th>
+              <th class="pb-3 font-semibold">Importe</th>
+              <th class="pb-3 font-semibold">Comercial Asignado</th>
+              <th class="pb-3 font-semibold">Estado</th>
+              <th class="pb-3 font-semibold text-right">Acción Rápida</th>
             </tr>
           </thead>
-          <tbody id="logsTableBody" class="divide-y divide-slate-800">
-            <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Cargando registros...</td></tr>
+          <tbody id="recentLeadsTable" class="divide-y divide-slate-800/50">
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-500">
+                <i class="fa-solid fa-spinner fa-spin text-indigo-400 mr-2"></i> Cargando actividad reciente...
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
+
   </main>
 
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-900 py-4 text-center text-xs text-slate-500">
+    © 2026 CartRevive. Plataforma de Venta Asistida para Shopify & Holded CRM.
+  </footer>
+
+  <!-- SCRIPT DASHBOARD -->
   <script>
-    const token = localStorage.getItem('cartrevive_token');
-    if (!token) window.location.href = '/';
-
-    async function initDashboard() {
-      try {
-        const res = await fetch('/api/auth/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) return logout();
-
-        const user = await res.json();
-        document.getElementById('tenantName').innerText = user.name;
-        document.getElementById('tenantPlan').innerText = `Plan ${user.plan}`;
-
-        await loadLogs();
-      } catch (err) {
-        logout();
-      }
-    }
-
-    async function loadLogs() {
-      try {
-        const res = await fetch('/api/tenant/logs', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const logs = await res.json();
-
-        const recovered = logs.filter(l => l.status === 'RECOVERED');
-        const qualified = logs.filter(l => l.status === 'QUALIFIED');
-        const ignored = logs.filter(l => l.status === 'IGNORED');
-
-        const recoveredTotal = recovered.reduce((acc, l) => acc + l.cartAmount, 0);
-        const pipelineTotal = qualified.reduce((acc, l) => acc + l.cartAmount, 0);
-        const totalOpportunities = recovered.length + qualified.length;
-        const convRate = totalOpportunities > 0 ? (recovered.length / totalOpportunities) * 100 : 0;
-
-        document.getElementById('statRecoveredAmount').innerText = `${recoveredTotal.toFixed(2)} €`;
-        document.getElementById('statRecoveredCount').innerText = `${recovered.length} pedidos recuperados`;
-        
-        document.getElementById('statPipelineAmount').innerText = `${pipelineTotal.toFixed(2)} €`;
-        document.getElementById('statPipelineCount').innerText = `${qualified.length} en gestión activa`;
-
-        document.getElementById('statConversionRate').innerText = `${convRate.toFixed(1)} %`;
-        document.getElementById('statIgnored').innerText = ignored.length;
-
-        const tbody = document.getElementById('logsTableBody');
-        if (logs.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">No hay carritos registrados todavía.</td></tr>`;
-          return;
-        }
-
-        tbody.innerHTML = logs.map(log => {
-          let badge = '';
-          if (log.status === 'RECOVERED') {
-            badge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] md:text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-              <i class="fa-solid fa-check-double"></i> Pagado ${log.shopifyOrderId ? `(#${log.shopifyOrderId})` : ''}
-            </span>`;
-          } else if (log.status === 'QUALIFIED') {
-            badge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] md:text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 whitespace-nowrap">
-              <i class="fa-solid fa-clock"></i> En Gestión
-            </span>`;
-          } else {
-            badge = `<span class="px-2.5 py-1 rounded-md text-[11px] md:text-xs font-medium bg-slate-800 text-slate-400">Omitido</span>`;
-          }
-
-          const agentName = log.agent ? log.agent.name : (log.assignedToName || 'Sin Asignar');
-          const agentBadge = agentName !== 'Sin Asignar'
-            ? `<span class="inline-flex items-center gap-1 text-[11px] md:text-xs text-indigo-300 font-medium bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 whitespace-nowrap"><i class="fa-solid fa-user-tie text-[10px]"></i> ${agentName}</span>`
-            : `<span class="text-xs text-slate-500">—</span>`;
-
-          return `
-            <tr class="hover:bg-slate-800/40 transition">
-              <td class="px-4 md:px-6 py-3 md:py-4 font-mono text-xs">
-                <div class="text-indigo-300 font-semibold">#${log.shopifyCartId}</div>
-                ${log.shopifyOrderId ? `<div class="text-[10px] text-emerald-400">#${log.shopifyOrderId}</div>` : ''}
-              </td>
-              <td class="px-4 md:px-6 py-3 md:py-4">
-                <div class="font-medium text-white text-xs md:text-sm">${log.customerName || 'Anónimo'}</div>
-                <div class="text-[11px] text-slate-400 truncate max-w-[120px] md:max-w-none">${log.customerEmail || log.customerPhone || 'Sin contacto'}</div>
-              </td>
-              <td class="px-4 md:px-6 py-3 md:py-4 font-semibold text-white text-xs md:text-sm">${log.cartAmount.toFixed(2)} ${log.currency}</td>
-              <td class="px-4 md:px-6 py-3 md:py-4">${agentBadge}</td>
-              <td class="px-4 md:px-6 py-3 md:py-4">${badge}</td>
-              <td class="px-4 md:px-6 py-3 md:py-4 text-right">
-                ${log.recoveryUrl && log.status !== 'RECOVERED' ? `
-                  <a href="${log.recoveryUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-lg text-xs font-medium border border-slate-700">
-                    Recuperar <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                  </a>
-                ` : (log.status === 'RECOVERED' ? '<span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i></span>' : '—')}
-              </td>
-            </tr>
-          `;
-        }).join('');
-      } catch (e) {
-        console.error(e);
-      }
+    const token = localStorage.getItem('token') || localStorage.getItem('cartrevive_token');
+    if (!token) {
+      window.location.href = '/login.html';
     }
 
     function logout() {
+      localStorage.removeItem('token');
       localStorage.removeItem('cartrevive_token');
-      window.location.href = '/';
+      window.location.href = '/login.html';
+    }
+
+    async function initDashboard() {
+      try {
+        // 1. Obtener datos de usuario y suscripción
+        const resUser = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (resUser.status === 401) {
+          logout();
+          return;
+        }
+
+        const user = await resUser.json();
+        document.getElementById('shopNameDisplay').innerText = user.name || user.email;
+
+        // Comprobar estado de suscripción
+        const subInfo = user.subscriptionInfo || { status: 'TRIALING', daysLeft: 15, isAllowed: true };
+        if (subInfo.status === 'TRIALING') {
+          const banner = document.getElementById('trialBanner');
+          const trialText = document.getElementById('trialDaysText');
+          banner.classList.remove('hidden');
+          trialText.innerText = `Te quedan ${subInfo.daysLeft} días de acceso gratuito total a todas las funciones.`;
+        } else if (subInfo.status === 'EXPIRED') {
+          window.location.href = '/billing.html';
+          return;
+        }
+
+        // 2. Obtener métricas
+        const resStats = await fetch('/api/dashboard/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (resStats.ok) {
+          const stats = await resStats.json();
+          document.getElementById('statTotalCarts').innerText = stats.totalCarts || 0;
+          document.getElementById('statAlertsSent').innerText = stats.alertsSent || 0;
+          document.getElementById('statRecoveredCount').innerText = stats.recoveredCount || 0;
+          document.getElementById('statRecoveredAmount').innerText = (stats.recoveredAmount || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
+        }
+
+        // 3. Obtener leads recientes
+        const resLeads = await fetch('/api/leads/recent', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const tbody = document.getElementById('recentLeadsTable');
+        if (resLeads.ok) {
+          const leads = await resLeads.json();
+          if (!leads || leads.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">No hay carritos abandonados registrados todavía. Conecta tu webhook de Shopify en la pestaña Integraciones para empezar.</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = leads.map(l => `
+            <tr class="hover:bg-slate-900/40 transition">
+              <td class="py-3 font-medium text-white">
+                <div>${l.customerName || 'Cliente Anónimo'}</div>
+                <div class="text-[10px] text-slate-500">${l.customerEmail || l.customerPhone || 'Sin contacto directo'}</div>
+              </td>
+              <td class="py-3 font-bold text-white">${parseFloat(l.totalPrice || 0).toFixed(2)} €</td>
+              <td class="py-3">
+                <span class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-[11px] font-medium border border-slate-700/60">
+                  <i class="fa-solid fa-user-tie text-[10px] text-indigo-400 mr-1"></i> ${l.agentName || 'No asignado'}
+                </span>
+              </td>
+              <td class="py-3">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${l.status === 'RECOVERED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'}">
+                  ${l.status === 'RECOVERED' ? 'Recuperado' : 'Notificado'}
+                </span>
+              </td>
+              <td class="py-3 text-right">
+                ${l.customerPhone ? `
+                  <a href="https://wa.me/${l.customerPhone.replace(/[^0-9]/g, '')}?text=Hola%20${encodeURIComponent(l.customerName || '')},%20vimos%20tu%20carrito%20en%20nuestra%20tienda" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                  </a>
+                ` : `<span class="text-slate-500 text-[11px]">Sin teléfono</span>`}
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">Esperando el primer lead de Shopify...</td></tr>`;
+        }
+
+      } catch (err) {
+        console.error('Error cargando el dashboard:', err);
+      }
     }
 
     initDashboard();
-    setInterval(loadLogs, 10000);
   </script>
 </body>
 </html>
