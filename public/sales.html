@@ -250,8 +250,8 @@
   </div>
 
   <script>
-    const token = localStorage.getItem('cartrevive_token');
-    if (!token) window.location.href = '/';
+    const token = localStorage.getItem('cartrevive_token') || localStorage.getItem('token');
+    if (!token) window.location.href = '/login.html';
 
     let agents = [];
     let cartLogs = [];
@@ -269,7 +269,7 @@
         if (!meRes.ok) return logout();
 
         const user = await meRes.json();
-        document.getElementById('tenantName').innerText = user.name;
+        (document.getElementById('shopNameDisplay') || document.getElementById('tenantName')).innerText = user.name;
         if (user.whatsappTemplate) {
           whatsappTemplate = user.whatsappTemplate;
         }
@@ -525,7 +525,7 @@
 
     function openAgentModal() { document.getElementById('agentModal').classList.remove('hidden'); }
     function closeAgentModal() { document.getElementById('agentModal').classList.add('hidden'); }
-    function logout() { localStorage.removeItem('cartrevive_token'); window.location.href = '/'; }
+    function logout() { localStorage.removeItem('cartrevive_token'); window.location.href = '/login.html'; }
 
     loadAll();
     setInterval(loadAll, 10000);

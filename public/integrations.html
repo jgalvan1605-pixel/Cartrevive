@@ -206,8 +206,8 @@
   </main>
 
   <script>
-    const token = localStorage.getItem('cartrevive_token');
-    if (!token) window.location.href = '/';
+    const token = localStorage.getItem('cartrevive_token') || localStorage.getItem('token');
+    if (!token) window.location.href = '/login.html';
 
     let currentUserId = null;
     let currentChatId = null;
@@ -224,7 +224,7 @@
         currentUserId = user.id;
         currentChatId = user.telegramChatId;
 
-        document.getElementById('tenantName').innerText = user.name;
+        (document.getElementById('shopNameDisplay') || document.getElementById('tenantName')).innerText = user.name;
         document.getElementById('shopifyWebhookUrl').value = `${window.location.origin}/api/webhooks/shopify/${user.id}`;
         document.getElementById('shopifyOrdersWebhookUrl').value = `${window.location.origin}/api/webhooks/shopify/${user.id}/orders`;
         
@@ -348,7 +348,7 @@
     function logout() {
       if (pollInterval) clearInterval(pollInterval);
       localStorage.removeItem('cartrevive_token');
-      window.location.href = '/';
+      window.location.href = '/login.html';
     }
 
     init();

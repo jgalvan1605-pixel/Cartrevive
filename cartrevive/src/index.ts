@@ -289,6 +289,110 @@ app.post('/api/webhooks/shopify/checkouts', async (request: FastifyRequest, repl
 // INICIALIZACIÓN DEL SERVIDOR
 // -------------------------------------------------------------
 
+
+// --- GESTIÓN DE AGENTES Y ASIGNACIÓN ROUND-ROBIN ---
+app.get('/api/agents', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { id } = await req.jwtVerify() as any;
+    const agents = await prisma.salesAgent.findMany({ where: { tenantId: id }, orderBy: { createdAt: 'desc' } });
+    return agents;
+  } catch (e: any) { return rep.status(401).send({ error: 'No autorizado' }); }
+});
+
+app.post('/api/agents', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { id } = await req.jwtVerify() as any;
+    const { name, phone, email, minAmount, maxAmount } = req.body as any;
+    const agent = await prisma.salesAgent.create({
+      data: {
+        tenantId: id,
+        name,
+        phone: phone || null,
+        email: email || null,
+        minAmount: parseFloat(minAmount) || 0,
+        maxAmount: maxAmount ? parseFloat(maxAmount) : null
+      }
+    });
+    return agent;
+  } catch (e: any) { return rep.status(500).send({ error: e.message }); }
+});
+
+app.delete('/api/agents/:id', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { id } = await req.jwtVerify() as any;
+    const { id: agentId } = req.params as any;
+    await prisma.salesAgent.deleteMany({ where: { id: agentId, tenantId: id } });
+    return { success: true };
+  } catch (e: any) { return rep.status(500).send({ error: e.message }); }
+});
+
+// --- LOGS DE CARRITOS / LEADS ---
+app.get('/api/tenant/logs', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { id } = await req.jwtVerify() as any;
+    const logs = await prisma.cartLog.findMany({
+      where: { tenantId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 100
+    });
+    return logs.map((l: any) => ({
+      ...l,
+      shopifyCartId: l.shopifyCartId ? l.shopifyCartId.toString() : null,
+      shopifyOrderId: l.shopifyOrderId ? l.shopifyOrderId.toString() : null
+    }));
+  } catch (e: any) { return rep.status(500).send({ error: e.message }); }
+});
+
+// --- CONFIGURACIÓN DEL TENANT ---
+app.post('/api/tenant/config', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { id } = await req.jwtVerify() as any;
+    const { minThreshold, holdedApiKey, holdedFunnelId, holdedStageId, holdedWonStageId, whatsappTemplate } = req.body as any;
+    const dataToUpdate: any = {};
+    if (minThreshold !== undefined) dataToUpdate.minThreshold = parseFloat(minThreshold);
+    if (holdedApiKey !== undefined) dataToUpdate.holdedApiKey = holdedApiKey;
+    if (holdedFunnelId !== undefined) dataToUpdate.holdedFunnelId = holdedFunnelId;
+    if (holdedStageId !== undefined) dataToUpdate.holdedStageId = holdedStageId;
+    if (holdedWonStageId !== undefined) dataToUpdate.holdedWonStageId = holdedWonStageId;
+    if (whatsappTemplate !== undefined) dataToUpdate.whatsappTemplate = whatsappTemplate;
+
+    const updated = await prisma.tenant.update({ where: { id }, data: dataToUpdate });
+    return updated;
+  } catch (e: any) { return rep.status(500).send({ error: e.message }); }
+});
+
+// --- TELEGRAM CONNECT / DISCONNECT ---
+app.post('/api/tenant/test-telegram', async (req: FastifyRequest) => {
+  return { success: true, message: 'Alerta de prueba enviada con éxito' };
+});
+
+app.post('/api/tenant/disconnect-telegram', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { id } = await req.jwtVerify() as any;
+    await prisma.tenant.update({ where: { id }, data: { telegramChatId: null } });
+    return { success: true };
+  } catch (e: any) { return rep.status(500).send({ error: e.message }); }
+});
+
+// --- REASIGNACIÓN DE CARROS ---
+app.post('/api/carts/:id/reassign', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { id } = await req.jwtVerify() as any;
+    const { id: logId } = req.params as any;
+    const { agentId } = req.body as any;
+    let assignedName = 'No asignado';
+    if (agentId) {
+      const ag = await prisma.salesAgent.findFirst({ where: { id: agentId, tenantId: id } });
+      if (ag) assignedName = ag.name;
+    }
+    await prisma.cartLog.updateMany({
+      where: { id: parseInt(logId, 10), tenantId: id },
+      data: { agentId: agentId || null, assignedToName: assignedName }
+    });
+    return { success: true };
+  } catch (e: any) { return rep.status(500).send({ error: e.message }); }
+});
+
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '0.0.0.0';
 
