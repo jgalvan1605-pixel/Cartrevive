@@ -3,273 +3,362 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CartRevive - Recuperación Asistida de Carritos de Alto Valor</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>CartRevive - Speed-to-Lead para Carritos de Alto Valor</title>
+  <meta name="description" content="Recupera carritos abandonados de alto ticket en Shopify contactando a tus clientes por Telegram y WhatsApp en menos de 5 minutos.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    @keyframes pulse-slow {
-      0%, 100% { opacity: 0.2; transform: scale(1); }
-      50% { opacity: 0.35; transform: scale(1.05); }
+    :root {
+      --bg-dark: #070a12;
+      --bg-card: rgba(16, 22, 38, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --gold: #f59e0b;
+      --gold-hover: #fbbf24;
+      --gold-glow: rgba(245, 158, 11, 0.18);
+      --emerald: #10b981;
+      --text-main: #f9fafb;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
     }
-    .animate-glow {
-      animation: pulse-slow 6s ease-in-out infinite;
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background-color: var(--bg-dark); color: var(--text-main); line-height: 1.5; overflow-x: hidden; position: relative; }
+
+    /* Efectos de Iluminación Ambiental */
+    .glow-top-left {
+      position: absolute; top: -150px; left: -100px; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(0,0,0,0) 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .glow-middle-right {
+      position: absolute; top: 900px; right: -150px; width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(0,0,0,0) 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.25rem 2.5rem; border-bottom: 1px solid var(--card-border);
+      background: rgba(7, 10, 18, 0.7); backdrop-filter: blur(16px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 1.4rem; font-weight: 800; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.02em; }
+    .logo span { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .nav-menu { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-menu a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+    .nav-menu a:hover { color: #fff; }
+    
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    .btn-login { color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 600; padding: 0.55rem 1.1rem; border-radius: 8px; transition: 0.2s; }
+    .btn-login:hover { background: rgba(255, 255, 255, 0.06); }
+    
+    .btn-cta {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #000; text-decoration: none; font-weight: 700; font-size: 0.9rem;
+      padding: 0.65rem 1.25rem; border-radius: 9px; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+    }
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35); background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%); }
+
+    /* Hero Section */
+    .hero { max-width: 1200px; margin: 4rem auto 3rem; padding: 0 1.5rem; text-align: center; position: relative; z-index: 5; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fcd34d; font-size: 0.8rem; font-weight: 700; padding: 0.4rem 1rem;
+      border-radius: 50px; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .hero-title { font-size: 3.6rem; font-weight: 900; line-height: 1.12; letter-spacing: -0.035em; max-width: 950px; margin: 0 auto 1.5rem; }
+    .hero-title span { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-subtitle { font-size: 1.15rem; color: var(--text-muted); max-width: 680px; margin: 0 auto 2.5rem; line-height: 1.6; }
+
+    .hero-buttons { display: flex; justify-content: center; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 2rem; }
+    .btn-cta-lg {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #000; text-decoration: none; font-weight: 800; font-size: 1.05rem;
+      padding: 1rem 2rem; border-radius: 12px; transition: all 0.2s;
+      box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3); display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-cta-lg:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(245, 158, 11, 0.4); }
+    .btn-secondary-lg {
+      background: rgba(255, 255, 255, 0.05); color: #fff; text-decoration: none; font-weight: 600;
+      font-size: 1.05rem; padding: 1rem 1.75rem; border-radius: 12px; border: 1px solid var(--card-border);
+      transition: 0.2s;
+    }
+    .btn-secondary-lg:hover { background: rgba(255, 255, 255, 0.1); }
+
+    .hero-guarantee { font-size: 0.85rem; color: var(--text-dim); display: flex; justify-content: center; align-items: center; gap: 1.5rem; }
+    .hero-guarantee span { display: flex; align-items: center; gap: 0.35rem; }
+
+    /* Mockup Interactivo de Telegram */
+    .mockup-container {
+      max-width: 780px; margin: 3.5rem auto 5rem;
+      background: var(--bg-card); border: 1px solid var(--card-border);
+      border-radius: 20px; padding: 1.75rem; backdrop-filter: blur(20px);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 50px var(--gold-glow);
+      text-align: left; position: relative;
+    }
+    .mockup-header { display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1rem; margin-bottom: 1.25rem; }
+    .bot-avatar { width: 40px; height: 40px; border-radius: 50%; background: #229ED9; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; }
+    .bot-info h4 { font-size: 0.95rem; font-weight: 700; }
+    .bot-info p { font-size: 0.75rem; color: #10b981; font-weight: 500; }
+    
+    .tg-bubble {
+      background: #1e293b; border-radius: 14px; border-top-left-radius: 2px;
+      padding: 1.25rem; font-size: 0.9rem; line-height: 1.6; border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .tg-bubble b { color: #fff; }
+    .tg-bubble .badge-hot { background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+    .tg-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 1rem; }
+    .tg-btn {
+      background: #2563eb; color: #fff; text-decoration: none; padding: 0.65rem;
+      border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .tg-btn.whatsapp { background: #16a34a; }
+
+    /* Métricas / Stats */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+      max-width: 1000px; margin: 0 auto 6rem; padding: 0 1.5rem;
+    }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--card-border);
+      border-radius: 16px; padding: 1.75rem; text-align: center; backdrop-filter: blur(10px);
+    }
+    .stat-number { font-size: 2.5rem; font-weight: 900; color: var(--gold); margin-bottom: 0.25rem; }
+    .stat-label { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+
+    /* Sección Características Grid */
+    .section-features { max-width: 1200px; margin: 0 auto 6rem; padding: 0 1.5rem; }
+    .section-header { text-align: center; max-width: 650px; margin: 0 auto 3.5rem; }
+    .section-tag { color: var(--gold); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .section-title { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+    .section-subtitle { color: var(--text-muted); font-size: 0.98rem; }
+
+    .grid-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+    .feature-card {
+      background: var(--bg-card); border: 1px solid var(--card-border);
+      border-radius: 20px; padding: 2rem; transition: 0.2s; position: relative;
+    }
+    .feature-card:hover { border-color: rgba(245, 158, 11, 0.4); transform: translateY(-3px); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.1);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1.25rem;
+    }
+    .feature-card h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .feature-card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+
+    /* Pricing Section */
+    .section-pricing { max-width: 900px; margin: 0 auto 6rem; padding: 0 1.5rem; }
+    .pricing-box {
+      background: var(--bg-card); border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 24px; padding: 3.5rem 2.5rem; text-align: center;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6), 0 0 35px var(--gold-glow);
+    }
+    .pricing-price { font-size: 3.5rem; font-weight: 900; color: #fff; margin: 1.5rem 0 0.5rem; }
+    .pricing-price span { font-size: 1.15rem; color: var(--text-muted); font-weight: 400; }
+    .pricing-list { list-style: none; max-width: 420px; margin: 2rem auto; text-align: left; display: flex; flex-direction: column; gap: 0.8rem; }
+    .pricing-list li { display: flex; align-items: center; gap: 0.75rem; color: #e2e8f0; font-size: 0.95rem; }
+    .pricing-list li::before { content: "✓"; color: var(--gold); font-weight: 900; }
+
+    /* Footer */
+    .footer { border-top: 1px solid var(--card-border); padding: 3rem 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+    .footer a { color: var(--text-muted); text-decoration: none; margin: 0 0.75rem; }
+    .footer a:hover { color: #fff; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.3rem; }
+      .nav-menu { display: none; }
+      .stats-bar { grid-template-columns: 1fr; }
+      .navbar { padding: 1rem 1.5rem; }
+      .tg-buttons { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white">
+<body>
 
-  <!-- GLOW DECORATIVO DE FONDO -->
-  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] h-[450px] bg-gradient-to-tr from-indigo-600/20 via-sky-500/20 to-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10 animate-glow"></div>
+  <div class="glow-top-left"></div>
+  <div class="glow-middle-right"></div>
 
-  <!-- NAVBAR -->
-  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur sticky top-0 z-40 px-4 md:px-8 py-3.5 flex justify-between items-center max-w-7xl mx-auto">
-    <div class="flex items-center space-x-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/25">
-        <i class="fa-solid fa-rotate-right"></i>
-      </div>
-      <span class="text-base md:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">CartRevive</span>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/index.html" class="logo">⚡ Cart<span>Revive</span></a>
+    
+    <ul class="nav-menu">
+      <li><a href="#como-funciona">Cómo Funciona</a></li>
+      <li><a href="#funcionalidades">Funcionalidades</a></li>
+      <li><a href="#precios">Precios</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="/login.html" class="btn-login">Iniciar Sesión</a>
+      <a href="/login.html?mode=register" class="btn-cta">
+        <span>Probar Gratis</span>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-badge">⚡ Speed-to-Lead para Tiendas Shopify</div>
+    <h1 class="hero-title">Recupera carritos de alto valor en <span>menos de 5 minutos</span>.</h1>
+    <p class="hero-subtitle">
+      El email marketing solo recupera el 4%. Con CartRevive, tus comerciales reciben una alerta instantánea en Telegram con los datos del carrito y botones para contactar por WhatsApp o llamada con 1 clic.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="/login.html?mode=register" class="btn-cta-lg">
+        <span>Comenzar Prueba Gratis (15 Días)</span>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      </a>
+      <a href="#como-funciona" class="btn-secondary-lg">Ver Cómo Funciona</a>
     </div>
 
-    <div class="flex items-center space-x-3">
-      <button onclick="toggleModal('loginModal')" class="px-4 py-2 text-xs md:text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-900 rounded-xl transition">
-        Iniciar Sesión
-      </button>
-      <button onclick="toggleModal('registerModal')" class="px-4 py-2 text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/25 transition">
-        Probar Gratis
-      </button>
+    <div class="hero-guarantee">
+      <span>🔒 Sin tarjeta de crédito</span>
+      <span>⚡ Configuración en 2 min</span>
+      <span>⭐ 15 días de acceso total</span>
+    </div>
+
+    <!-- Mockup de Alerta en Telegram -->
+    <div class="mockup-container" id="como-funciona">
+      <div class="mockup-header">
+        <div class="bot-avatar">🤖</div>
+        <div class="bot-info">
+          <h4>CartRevive Bot</h4>
+          <p>● Conectado en tiempo real</p>
+        </div>
+      </div>
+
+      <div class="tg-bubble">
+        <span class="badge-hot">🔥 LEAD CALIENTE</span> <b>¡Carrito de Alto Valor Abandonado!</b><br><br>
+        👤 <b>Cliente:</b> Carlos Mendoza<br>
+        📞 <b>Teléfono:</b> +34 612 34 56 78<br>
+        💰 <b>Importe:</b> 850.00 EUR<br>
+        📦 <b>Artículos:</b> 1x Rack Multifuncional Pro + Set Discos Bumper 100kg<br>
+        👤 <b>Comercial Asignado:</b> Carlos (Round-Robin)<br>
+        ⏰ <i>Abandonado hace 2 minutos</i>
+
+        <div class="tg-buttons">
+          <a href="#" class="tg-btn whatsapp" onclick="alert('En el bot real, este botón abre directamente una conversación de WhatsApp con el mensaje listo para enviar.'); return false;">
+            💬 Abrir WhatsApp Directo
+          </a>
+          <a href="#" class="tg-btn" onclick="alert('En el bot real, este botón abre el checkout exacto del cliente en Shopify.'); return false;">
+            🛒 Ver Carrito en Tienda
+          </a>
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- HERO SECTION -->
-  <section class="max-w-5xl mx-auto px-4 md:px-6 pt-12 md:pt-20 pb-12 md:pb-16 text-center space-y-6">
-    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-700/80 text-xs font-semibold text-sky-400 shadow-inner">
-      <span class="flex h-2 w-2 relative">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-      </span>
-      <span>Novedad: Alertas Speed-to-Lead en Telegram &lt; 5s</span>
+  <!-- Métricas Clave -->
+  <section class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-number">&lt; 5 min</div>
+      <div class="stat-label">Tiempo medio de primer contacto comercial</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">x3.2</div>
+      <div class="stat-label">Mayor tasa de cierre frente a flujos de email</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">Automatizado vía Webhook oficial de Shopify</div>
+    </div>
+  </section>
+
+  <!-- Funcionalidades -->
+  <section class="section-features" id="funcionalidades">
+    <div class="section-header">
+      <div class="section-tag">Automatización Completa</div>
+      <h2 class="section-title">Diseñado para maximizar el Speed-to-Lead</h2>
+      <p class="section-subtitle">Todo lo que tu equipo de ventas necesita para convertir dudas de compra en pedidos cerrados.</p>
     </div>
 
-    <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.15] max-w-4xl mx-auto">
-      No envíes otro email frío. <br class="hidden sm:inline">
-      <span class="bg-gradient-to-r from-indigo-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">Cierra carritos de alto valor por teléfono y WhatsApp.</span>
-    </h1>
+    <div class="grid-features">
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Filtro por Umbral Mínimo</h3>
+        <p>Ignora carritos pequeños de bajo valor. Define tu límite (ej. >150€) y activa alertas solo para compras importantes que merecen atención humana.</p>
+      </div>
 
-    <p class="text-sm md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-      Captura carritos abandonados de Shopify superiores a tu umbral, repártelos de forma equitativa a tus comerciales y notifícalos al instante en su móvil con botones de llamada y WhatsApp en 1 clic.
-    </p>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>Asignación Round-Robin</h3>
+        <p>Distribuye los leads equitativamente entre tu equipo comercial en función de su disponibilidad y tramos de importe de venta.</p>
+      </div>
 
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-      <button onclick="toggleModal('registerModal')" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm md:text-base rounded-2xl shadow-xl shadow-indigo-600/30 transition flex items-center justify-center gap-2">
-        <i class="fa-solid fa-bolt text-indigo-200"></i> Empezar a Recuperar Leads
-      </button>
-      <a href="#features" class="w-full sm:w-auto px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-semibold text-sm md:text-base rounded-2xl border border-slate-800 transition">
-        Ver Cómo Funciona
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Alertas Push en Telegram</h3>
+        <p>Notificaciones inmediatas al móvil de cada comercial con botones directos para llamar o abrir WhatsApp con plantilla personalizada.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💼</div>
+        <h3>Sincronización Holded CRM</h3>
+        <p>Crea oportunidades automáticamente en tu CRM de Holded y marca el deal como ganado en cuanto Shopify confirma el cobro.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Panel de Métricas en Vivo</h3>
+        <p>Monitorea en tiempo real los carritos detectados, la facturación recuperada y el rendimiento individual de cada comercial.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Integración en 2 Minutos</h3>
+        <p>Sin instalaciones complejas de código. Conecta el webhook de Shopify, vincula tu Telegram en 1 clic y empieza a recibir leads.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Precios -->
+  <section class="section-pricing" id="precios">
+    <div class="section-header">
+      <div class="section-tag">Inversión Simple</div>
+      <h2 class="section-title">Comienza hoy con 15 días gratis</h2>
+      <p class="section-subtitle">Se paga solo con el primer carrito de alto valor que recuperes.</p>
+    </div>
+
+    <div class="pricing-box">
+      <div class="hero-badge" style="margin-bottom: 0;">Todo Incluido</div>
+      <div class="pricing-price">49€ <span>/ mes</span></div>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Prueba completa de 15 días. Cancela cuando quieras.</p>
+
+      <ul class="pricing-list">
+        <li>Carritos y alertas ilimitadas sin comisión por venta</li>
+        <li>Integración directa con Shopify y Telegram Push</li>
+        <li>Botones rápidos de WhatsApp y llamada directa</li>
+        <li>Round-Robin comercial ilimitado</li>
+        <li>Conexión con CRM (Holded) y métricas de atribución</li>
+      </ul>
+
+      <a href="/login.html?mode=register" class="btn-cta-lg" style="width: 100%; max-width: 420px; justify-content: center; margin: 0 auto;">
+        <span>Empezar Mis 15 Días Gratis</span>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
       </a>
     </div>
-
-    <!-- MÉTRICAS DESTACADAS -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 pt-10 max-w-4xl mx-auto text-left">
-      <div class="p-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
-        <div class="text-2xl md:text-3xl font-extrabold text-emerald-400">3x - 4x</div>
-        <div class="text-[11px] md:text-xs text-slate-400 font-medium mt-0.5">Mayor conversión que un email automático</div>
-      </div>
-      <div class="p-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
-        <div class="text-2xl md:text-3xl font-extrabold text-sky-400">&lt; 5 seg</div>
-        <div class="text-[11px] md:text-xs text-slate-400 font-medium mt-0.5">Alerta directa al bolsillo del comercial</div>
-      </div>
-      <div class="p-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
-        <div class="text-2xl md:text-3xl font-extrabold text-indigo-400">100%</div>
-        <div class="text-[11px] md:text-xs text-slate-400 font-medium mt-0.5">Reparto Round-Robin sin sesgos</div>
-      </div>
-      <div class="p-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur">
-        <div class="text-2xl md:text-3xl font-extrabold text-purple-400">0 €</div>
-        <div class="text-[11px] md:text-xs text-slate-400 font-medium mt-0.5">Coste por mensaje en Telegram & CRM</div>
-      </div>
-    </div>
   </section>
 
-  <!-- FEATURES SECTION -->
-  <section id="features" class="max-w-5xl mx-auto px-4 md:px-6 py-12 md:py-20 border-t border-slate-800/80 space-y-12">
-    <div class="text-center space-y-3 max-w-2xl mx-auto">
-      <h2 class="text-2xl md:text-4xl font-extrabold text-white">Todo lo que necesitas para que tu equipo comercial reviente objetivos</h2>
-      <p class="text-xs md:text-sm text-slate-400">Diseñado desde cero para ecommerce de maquinaria, fitness, electrónica, joyería, mobiliario y B2B.</p>
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2026 CartRevive. Plataforma de Speed-to-Lead para E-commerce.</p>
+    <div style="margin-top: 0.75rem;">
+      <a href="/login.html">Acceso a Clientes</a>
+      <a href="/login.html?mode=register">Crear Cuenta</a>
+      <a href="/integrations.html">Integraciones</a>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-      <!-- Feature 1: Speed-to-Lead Telegram -->
-      <div class="p-6 md:p-8 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-sky-500/40 transition group relative overflow-hidden">
-        <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition">
-          <i class="fa-brands fa-telegram"></i>
-        </div>
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-bold uppercase tracking-wider mb-2">
-          ⚡ Speed-to-Lead &lt; 5s
-        </div>
-        <h3 class="text-lg font-bold text-white mb-2">Alertas Flash en Telegram</h3>
-        <p class="text-xs md:text-sm text-slate-400 leading-relaxed">
-          Notifica a tus comerciales al instante. Reciben la ficha del cliente en su móvil con botones interactivos para llamar o abrir WhatsApp con 1 solo toque.
-        </p>
-      </div>
-
-      <!-- Feature 2: Round-Robin Equitativo -->
-      <div class="p-6 md:p-8 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-indigo-500/40 transition group">
-        <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition">
-          <i class="fa-solid fa-users-gear"></i>
-        </div>
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold uppercase tracking-wider mb-2">
-          🎯 Asignación Inteligente
-        </div>
-        <h3 class="text-lg font-bold text-white mb-2">Motor Round-Robin por Tramos</h3>
-        <p class="text-xs md:text-sm text-slate-400 leading-relaxed">
-          Segmenta por tickets o reparte de forma rotativa y equitativa según la última asignación temporal. Cero favoritismos, máxima productividad.
-        </p>
-      </div>
-
-      <!-- Feature 3: Holded CRM & Shopify Auto-Sync -->
-      <div class="p-6 md:p-8 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 transition group">
-        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition">
-          <i class="fa-solid fa-handshake"></i>
-        </div>
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider mb-2">
-          🔄 Holded + Shopify
-        </div>
-        <h3 class="text-lg font-bold text-white mb-2">Auto-Cierre de Deals</h3>
-        <p class="text-xs md:text-sm text-slate-400 leading-relaxed">
-          Crea el Deal en Holded en la etapa adecuada. En cuanto el cliente paga en Shopify, CartRevive lo detecta y pasa la oportunidad a "Ganada" automáticamente.
-        </p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- CTA FINAL -->
-  <section class="max-w-4xl mx-auto px-4 md:px-6 py-12 md:py-16 text-center">
-    <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 md:p-12 space-y-6 shadow-2xl relative overflow-hidden">
-      <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
-      <h2 class="text-2xl md:text-4xl font-extrabold text-white">¿Listo para recuperar miles de euros cada mes?</h2>
-      <p class="text-xs md:text-sm text-slate-400 max-w-xl mx-auto">
-        Conéctalo a tu Shopify en 3 minutos. Sin programar y con soporte para todo tu equipo de ventas.
-      </p>
-      <button onclick="toggleModal('registerModal')" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm md:text-base rounded-2xl shadow-xl shadow-indigo-600/30 transition">
-        Crear Cuenta Ahora
-      </button>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-400">
-    © 2026 CartRevive. Plataforma de Venta Asistida para Shopify & Holded CRM.
   </footer>
 
-  <!-- MODAL LOGIN -->
-  <div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full space-y-5 shadow-2xl">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base md:text-lg font-bold text-white">Iniciar Sesión en CartRevive</h3>
-        <button onclick="toggleModal('loginModal')" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <form onsubmit="handleLogin(event)" class="space-y-4">
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-300">Email Corporativo</label>
-          <input id="loginEmail" type="email" required class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="admin@tutienda.com">
-        </div>
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-300">Contraseña</label>
-          <input id="loginPassword" type="password" required class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
-        </div>
-        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition">
-          Entrar al Panel
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL REGISTER -->
-  <div id="registerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full space-y-5 shadow-2xl">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base md:text-lg font-bold text-white">Crear Cuenta en CartRevive</h3>
-        <button onclick="toggleModal('registerModal')" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <form onsubmit="handleRegister(event)" class="space-y-4">
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-300">Nombre de la Tienda / Empresa</label>
-          <input id="regName" type="text" required class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="Ej. Akon Fitness">
-        </div>
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-300">Email Corporativo</label>
-          <input id="regEmail" type="email" required class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="admin@tutienda.com">
-        </div>
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-300">Contraseña</label>
-          <input id="regPassword" type="password" required class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
-        </div>
-        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition">
-          Comenzar Ahora
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    function toggleModal(id) {
-      const el = document.getElementById(id);
-      el.classList.toggle('hidden');
-    }
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
-
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('cartrevive_token', data.token);
-          window.location.href = '/dashboard.html';
-        } else {
-          alert('Error: ' + (data.error || 'Credenciales inválidas'));
-        }
-      } catch (err) {
-        alert('Error conectando con el servidor');
-      }
-    }
-
-    async function handleRegister(e) {
-      e.preventDefault();
-      const name = document.getElementById('regName').value;
-      const email = document.getElementById('regEmail').value;
-      const password = document.getElementById('regPassword').value;
-
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('cartrevive_token', data.token);
-          window.location.href = '/dashboard.html';
-        } else {
-          alert('Error: ' + (data.error || 'No se pudo crear la cuenta'));
-        }
-      } catch (err) {
-        alert('Error conectando con el servidor');
-      }
-    }
-  </script>
 </body>
 </html>
