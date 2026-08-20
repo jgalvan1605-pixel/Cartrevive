@@ -394,19 +394,35 @@ app.post('/api/carts/:id/reassign', async (req: FastifyRequest, rep: FastifyRepl
 });
 
 
-// --- PROXY AUTO-DISCOVERY EMBUDOS HOLDED ---
+// --- PROXY AUTO-DISCOVERY EMBUDOS HOLDED (v2 items + v1) ---
 app.post('/api/holded/funnels', async (req: FastifyRequest, rep: FastifyReply) => {
   try {
     const { apiKey } = req.body as any;
     if (!apiKey) return rep.status(400).send({ error: 'API Key requerida' });
-    const res = await fetch('https://api.holded.com/api/crm/v1/funnels', {
-      headers: { 'key': apiKey, 'Accept': 'application/json' }
+    const cleanKey = apiKey.trim();
+
+    let res = await fetch('https://api.holded.com/api/v2/funnels', {
+      headers: { 'Authorization': `Bearer ${cleanKey}`, 'Accept': 'application/json' }
     });
-    if (!res.ok) return rep.status(400).send({ error: 'API Key de Holded no válida' });
-    const funnels = await res.json();
-    return funnels;
+
+    if (res.ok) {
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.items || []);
+    }
+
+    res = await fetch('https://api.holded.com/api/crm/v1/funnels', {
+      headers: { 'key': cleanKey, 'Accept': 'application/json' }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.items || []);
+    }
+
+    return rep.status(400).send({ error: 'Holded no reconoció la clave' });
   } catch (e: any) { return rep.status(500).send({ error: e.message }); }
 });
+
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '0.0.0.0';
 
