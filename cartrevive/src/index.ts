@@ -393,6 +393,20 @@ app.post('/api/carts/:id/reassign', async (req: FastifyRequest, rep: FastifyRepl
   } catch (e: any) { return rep.status(500).send({ error: e.message }); }
 });
 
+
+// --- PROXY AUTO-DISCOVERY EMBUDOS HOLDED ---
+app.post('/api/holded/funnels', async (req: FastifyRequest, rep: FastifyReply) => {
+  try {
+    const { apiKey } = req.body as any;
+    if (!apiKey) return rep.status(400).send({ error: 'API Key requerida' });
+    const res = await fetch('https://api.holded.com/api/crm/v1/funnels', {
+      headers: { 'key': apiKey, 'Accept': 'application/json' }
+    });
+    if (!res.ok) return rep.status(400).send({ error: 'API Key de Holded no válida' });
+    const funnels = await res.json();
+    return funnels;
+  } catch (e: any) { return rep.status(500).send({ error: e.message }); }
+});
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '0.0.0.0';
 
